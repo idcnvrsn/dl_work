@@ -39,66 +39,40 @@ from chainer import serializers
 
 import six
 
-fMakeTrain = 0
 fDoMode = 0
 
-if fMakeTrain == 1:
-    # 予測出力ファイル
-    fn_prediction = 'prediction.csv'
-    
-    # ダウンロードデータ
-    train_csv    = '../../train.csv'
-    train_images = '../../train_images'
-    test_csv     = 'test.csv'
-    test_images  = 'test_images'
-    
-    _columns = ['company_name', 'full_name', 'position_name', 'address', 'phone_number', 'fax', 'mobile', 'email', 'url']
-    
-    _img_len = 96
-    
-    _batch_size = 128
-    _nb_epoch   = 20
-    _sgd_lr     = 0.1
-    _sgd_decay  = 0.001
-    _Wreg_l2    = 0.0001
-    
-    def _load_rawdata(df, dir_images):
-        '''画像を読み込み、4Dテンソル (len(df), 1, _img_len, _img_len) として返す
-        '''
-    
-        X = np.zeros((len(df), 1, _img_len, _img_len), dtype=np.float32)
-    
-        for i, row in df.iterrows():
-            print(i,dir_images, row.filename)
-            img = Image.open(os.path.join(dir_images, row.filename))
-            img = img.crop((row.left, row.top, row.right, row.bottom))
-            img = img.convert('L')
-            img = img.resize((_img_len, _img_len), resample=Image.BICUBIC)
-    
-            # 白黒反転しつつ最大値1最小値0のfloat32に画素値を正規化
-            img = np.asarray(img, dtype=np.float32)
-            b, a = np.max(img), np.min(img)
-            X[i, 0] = (b-img) / (b-a) if b > a else 0
-    
-        return X
-    
-    def load_train_data():
-        df = pd.read_csv(train_csv)
-        X = _load_rawdata(df, train_images)
-        Y = df[_columns].values
-#        Y = Y.astype("float32")
-        return X, Y
-    
-    X, y = load_train_data()
+import sys
+import pickle
+import numpy as np
 
-    joblib.dump(X,"X.pkl")
-    joblib.dump(y,"y.pkl")
-else:
-    X = joblib.load("X.pkl")
-    y = joblib.load("y.pkl")
+def unpickle(file):
+    fp = open(file, 'rb')
+    if sys.version_info.major == 2:
+        data = pickle.load(fp)
+    elif sys.version_info.major == 3:
+        data = pickle.load(fp, encoding='latin-1')
+    fp.close()
 
-y = y.astype(np.int32)
-X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.8, random_state=1234)
+    return data
+
+X_train = None
+y_train = []
+
+for i in range(1,6):
+    data_dic = unpickle("cifar-10-batches-py/data_batch_{}".format(i))
+    if i == 1:
+        X_train = data_dic['data']
+    else:
+        X_train = np.vstack((X_train, data_dic['data']))
+    y_train += data_dic['labels']
+X_train = X_train.reshape((len(X_train),3, 32, 32))
+y_train = np.array(y_train)
+
+test_data_dic = unpickle("cifar-10-batches-py/test_batch")
+X_test = test_data_dic['data']
+X_test = X_test.reshape(len(X_test),3,32,32)
+y_test = np.array(test_data_dic['labels'])
+
 print("X_train shape",X_train.shape)
 print("y_train shape",y_train.shape)
 
@@ -209,7 +183,7 @@ for epoch in six.moves.range(1, n_epoch + 1):
     sum_loss = 0
     for i in six.moves.range(0, X_train.shape[0], batchsize):
         x = chainer.Variable(xp.asarray(X_train[perm[i:i + batchsize]]))
-        t = chainer.Variable(xp.asarray(y_train[perm[i:i + batchsize],0]))
+        t = chainer.Variable(xp.asarray(y_train[perm[i:i + batchsize]]))
 #        x = xp.asarray(X_train[perm[i:i + batchsize]])
 #        t = xp.asarray(y_train[perm[i:i + batchsize],0])
 
@@ -235,7 +209,7 @@ for epoch in six.moves.range(1, n_epoch + 1):
     for i in six.moves.range(0, X_test.shape[0], batchsize):
         x = chainer.Variable(xp.asarray(X_test[i:i + batchsize]),
                              volatile='on')
-        t = chainer.Variable(xp.asarray(y_test[i:i + batchsize,0]),
+        t = chainer.Variable(xp.asarray(y_test[i:i + batchsize]),
                              volatile='on')
 #        x = xp.asarray(X_test[i:i + batchsize])
 #        t = xp.asarray(y_test[i:i + batchsize,0])

@@ -65,13 +65,16 @@ for i in range(1,6):
     else:
         X_train = np.vstack((X_train, data_dic['data']))
     y_train += data_dic['labels']
-X_train = X_train.reshape((len(X_train),3, 32, 32))
+X_train = X_train.reshape((len(X_train),3, 32, 32))/255.
 y_train = np.array(y_train)
 
 test_data_dic = unpickle("cifar-10-batches-py/test_batch")
 X_test = test_data_dic['data']
-X_test = X_test.reshape(len(X_test),3,32,32)
+X_test = X_test.reshape(len(X_test),3,32,32)/255.
 y_test = np.array(test_data_dic['labels'])
+
+X_train = X_train.astype(np.float32)
+X_test = X_test.astype(np.float32)
 
 print("X_train shape",X_train.shape)
 print("y_train shape",y_train.shape)
@@ -83,10 +86,10 @@ print('検証データの数:', len(X_test))
 class CNN(chainer.Chain):
     def __init__(self):
         super(CNN, self).__init__(
-        conv1=F.Convolution2D(1, 96, 3, pad=1),
-        conv2=F.Convolution2D(96, 32, 3, pad=1),
-        l1=F.Linear(18432, 1024),
-        l2=F.Linear(1024, 9)
+        conv1=F.Convolution2D(3, 32, 3, pad=1),
+        conv2=F.Convolution2D(32, 32, 3, pad=1),
+        l1=F.Linear(2048, 1024),
+        l2=F.Linear(1024, 10)
         )
         self.train = True
 

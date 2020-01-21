@@ -31,7 +31,7 @@ import argparse
 import os
 
 
-def train_L2(x, y, classes, val_x ,val_y):
+def train_L2(x, y, classes, val_x ,val_y,epoch):
     print("L2-SoftmaxLoss training...")
     mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
                          weights='imagenet')
@@ -52,7 +52,7 @@ def train_L2(x, y, classes, val_x ,val_y):
                   metrics=['accuracy'])
 
     #学習
-    hist = model.fit(x, y, batch_size=24, epochs=15, verbose = 1, validation_data=(val_x,val_y))
+    hist = model.fit(x, y, batch_size=24, epochs=epoch, verbose = 1, validation_data=(val_x,val_y))
 
     #plt.figure()               
     #plt.plot(hist.history['acc'],label="train_acc")
@@ -118,6 +118,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-n', '--normal_image_dir', default="images_labels_normal/images", help='正常画像が保存されたディレクトリ')
     parser.add_argument('-a', '--anomaly_image_dir', default="images_labels_ano/images", help='異常画像が保存されたディレクトリ')
+    parser.add_argument('-e', '--epoch', default=30, type=int, help='学習する最大エポック数')
     parser.add_argument('-s', '--image_size', default=224, type=int, help='画像サイズ')
     parser.add_argument('-r', '--refname', default="pascal_voc", help='リファレンスデータ')
     
@@ -187,7 +188,7 @@ if __name__ == '__main__':
 
     #L2-SoftmaxLoss
     model = train_L2(np.vstack((normal_train_images, pv_train_images)), np.vstack((y_normal_train, y_pv_train)), y_pv_train.shape[1],
-                     np.vstack((normal_val_images,pv_val_images)), np.vstack((y_normal_val,y_pv_val)) )
+                     np.vstack((normal_val_images,pv_val_images)), np.vstack((y_normal_val,y_pv_val)), args.epoch )
 
     model.save("model.hdf5")
 

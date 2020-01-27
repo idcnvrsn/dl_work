@@ -145,27 +145,27 @@ if __name__ == '__main__':
 
     # リファレンスデータ読み込み
     if args.refname == "pascal_voc":
-        pv_label_filenames = sorted(glob("../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
+        ref_label_filenames = sorted(glob("../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
         
-        y_pv = np.zeros((5717,21),dtype=np.uint8)
-        for index, pv_label_filename in enumerate(pv_label_filenames):
-            df = pd.read_csv(pv_label_filename,header=None, delim_whitespace=True)
-            y_pv[df.iloc[:,1]==1, index] = 1
+        y_ref = np.zeros((5717,21),dtype=np.uint8)
+        for index, ref_label_filename in enumerate(ref_label_filenames):
+            df = pd.read_csv(ref_label_filename,header=None, delim_whitespace=True)
+            y_ref[df.iloc[:,1]==1, index] = 1
         
-        pv_filenames=["../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
+        ref_filenames=["../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
 
-        pv_filenames=pv_filenames[:1000]
-        y_pv = y_pv[:len(pv_filenames)]
+        ref_filenames=ref_filenames[:1000]
+        y_ref = y_ref[:len(ref_filenames)]
     
-        pv_images = np.zeros((len(pv_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
-        for index, pv_filename in enumerate(pv_filenames):
-            pv_image = imageio.imread(pv_filename)
-            pv_image = cv2.resize(pv_image,(image_file_size,image_file_size))
-            pv_images[index] = pv_image
+        ref_images = np.zeros((len(ref_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
+        for index, ref_filename in enumerate(ref_filenames):
+            ref_image = imageio.imread(ref_filename)
+            ref_image = cv2.resize(ref_image,(image_file_size,image_file_size))
+            ref_images[index] = ref_image
         
-        pv_images = pv_images.astype('float32') / 255
-        pv_train_images, pv_test_images, y_pv_train, y_pv_test = train_test_split(pv_images, y_pv, test_size=0.2, random_state=1)
-        pv_train_images, pv_val_images, y_pv_train, y_pv_val = train_test_split(pv_train_images, y_pv_train, test_size=0.2, random_state=1)
+        ref_images = ref_images.astype('float32') / 255
+        ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
+        ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
     else:
         assert False, "No reference is indicated."
     
@@ -183,12 +183,12 @@ if __name__ == '__main__':
 
     # テスト画像の保存
     np.save("normal_test_images.npy", normal_test_images)
-    np.save("pv_test_images.npy", pv_test_images)
+    np.save("ref_test_images.npy", ref_test_images)
     np.save("ano_test_images.npy", ano_test_images)
 
     #L2-SoftmaxLoss
-    model = train_L2(np.vstack((normal_train_images, pv_train_images)), np.vstack((y_normal_train, y_pv_train)), y_pv_train.shape[1],
-                     np.vstack((normal_val_images,pv_val_images)), np.vstack((y_normal_val,y_pv_val)), args.epoch )
+    model = train_L2(np.vstack((normal_train_images, ref_train_images)), np.vstack((y_normal_train, y_ref_train)), y_ref_train.shape[1],
+                     np.vstack((normal_val_images,ref_val_images)), np.vstack((y_normal_val,y_ref_val)), args.epoch )
 
     model.save("model.hdf5")
 
@@ -204,21 +204,21 @@ if __name__ == '__main__':
     # 次元圧縮してプロット
     print("ploting with dimension reduction...")
     pred_normal_test = model_ev.predict(normal_test_images, batch_size=1)
-    pred_pv_test = model_ev.predict(pv_test_images, batch_size=1)
+    pred_ref_test = model_ev.predict(ref_test_images, batch_size=1)
     pred_ano_test = model_ev.predict(ano_test_images, batch_size=1)
 
-    X_reduced = TSNE(n_components=2, random_state=0).fit_transform(np.vstack((pred_normal_test,pred_pv_test,pred_ano_test)))
+    X_reduced = TSNE(n_components=2, random_state=0).fit_transform(np.vstack((pred_normal_test,pred_ref_test,pred_ano_test)))
     print(X_reduced.shape)
 
     range_normal = range(0,pred_normal_test.shape[0])
-    range_pv = range(pred_normal_test.shape[0],pred_normal_test.shape[0]+pred_pv_test.shape[0])
-    range_ano = range(pred_normal_test.shape[0]+pred_pv_test.shape[0],pred_normal_test.shape[0]+pred_pv_test.shape[0]+pred_ano_test.shape[0])
+    range_ref = range(pred_normal_test.shape[0],pred_normal_test.shape[0]+pred_ref_test.shape[0])
+    range_ano = range(pred_normal_test.shape[0]+pred_ref_test.shape[0],pred_normal_test.shape[0]+pred_ref_test.shape[0]+pred_ano_test.shape[0])
 
     plt.scatter(X_reduced[range_normal, 0], X_reduced[range_normal, 1], s=3, c="blue", label="normal")
-    plt.scatter(X_reduced[range_pv, 0], X_reduced[range_pv, 1], s=3, c="green", label="reference")
+    plt.scatter(X_reduced[range_ref, 0], X_reduced[range_ref, 1], s=3, c="green", label="reference")
     plt.scatter(X_reduced[range_ano, 0], X_reduced[range_ano, 1], s=3, c="red", label="anomaly")
     plt.legend(loc='best')
-#    target = np.hstack(([0]*pred_normal_test.shape[0],[1]*pred_pv_test.shape[0],[2]*pred_ano_test.shape[0]))
+#    target = np.hstack(([0]*pred_normal_test.shape[0],[1]*pred_ref_test.shape[0],[2]*pred_ano_test.shape[0]))
 #    plt.scatter(X_reduced[:, 0], X_reduced[:, 1], s=3,c=target)
 
     # kNNを使って距離空間で分類器を学習する

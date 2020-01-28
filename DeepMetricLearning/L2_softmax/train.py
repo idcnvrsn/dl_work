@@ -3,7 +3,6 @@
 """
 Created on Mon Dec 16 14:59:47 2019
 
-@author: d2713
 """
 
 from glob import glob
@@ -29,7 +28,8 @@ from sklearn.metrics import confusion_matrix
 from time import time
 import argparse
 import os
-
+import json
+from pycocotools.coco import COCO
 
 def train_L2(x, y, classes, val_x ,val_y,epoch):
     print("L2-SoftmaxLoss training...")
@@ -114,24 +114,63 @@ def get_score_doc(model, x_train_normal, x_test_normal, x_test_anomaly):
 
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning')
+    parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
 
-    parser.add_argument('-n', '--normal_image_dir', default="images_labels_normal/images", help='正常画像が保存されたディレクトリ')
-    parser.add_argument('-a', '--anomaly_image_dir', default="images_labels_ano/images", help='異常画像が保存されたディレクトリ')
+    parser.add_argument('-n', '--normal_dataset', nargs="*",default=["dir","images_labels_normal/images"], help='正常画像を指定する。冒頭がdirでディレクトリ指定(クラスは１つとして扱う。例 -n dir dataset/image)。冒頭がcocoでcocoのid指定(-n coco 2,6)。')
+    parser.add_argument('-a', '--anomaly_dataset', nargs="*",default=["dir","images_labels_ano/images"], help='異常画像を指定する。容量は--normal_datasetと同じ。')
+    parser.add_argument('-r', '--ref_dataset', nargs="*",default=["dir","images_labels_ref/images"], help='リファレンス画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-e', '--epoch', default=30, type=int, help='学習する最大エポック数')
-    parser.add_argument('-s', '--image_size', default=224, type=int, help='画像サイズ')
+    parser.add_argument('-s', '--image_size', default=224, type=int, help='学習時画像サイズ')
+    parser.add_argument('--mscoco_dir', default="val2017",help="mscocoデータセットのディレクトリ")
+    parser.add_argument('--mscoco_annotations_dir', default="annotations_trainval2017",help="mscocoデータセットのアノテーションディレクトリ")
+    parser.add_argument('--pascal_voc_dir', default="VOCdevkit/VOC2012")
     parser.add_argument('-od', '--old_data_mode', action='store_true',help='データセットの指定モードを古い要領で行う場合')
     
     args = parser.parse_args()
     print(args)
 
     image_file_size = args.image_size
+    
+    if args.normal_dataset[0] == "dir":
+        normal_image_dir = args.normal_dataset[0]
+    elif args.normal_dataset[0] == "coco":
 
+        coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
+        # display COCO categories and supercategories
+        cats = coco.loadCats(coco.getCatIds())
+        nms=[cat['name'] for cat in cats]
+        print('COCO categories: \n\n', ' '.join(nms))
+        
+        nms = set([cat['supercategory'] for cat in cats])
+        print('COCO supercategories: \n', ' '.join(nms) )
+        
+#        catIds = coco.getCatIds(catNms=['dog']);
+        catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
+        imgIds = coco.getImgIds(catIds=catIds );
+        img = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])[0]
+#        imgs = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])
+
+        annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
+        anns = coco.loadAnns(annIds)
+        
+        for ann in anns:
+            print(ann["image_id"],"\n")
+
+        """
+        with open(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json","r") as f:
+            coco_ann = json.load(f)
+        
+        for ann in coco_ann["annotations"][:500]:
+            if ann['category_id'] in cat_ids:
+                assert ann['category_id'] == 2
+#                image_filenames
+                print(ann)
+                for in ann['image_id']:
+        """
     # リファレンスデータ読み込み
-    if args.old_data_mode:
-
+    if args.old_data_mode is False:
         # 正常データ読み込み
-        image_filenames = glob(args.normal_image_dir+os.sep+"*.jpg")
+        image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
         image_filenames = image_filenames#[:1000]
     
         normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
@@ -146,14 +185,31 @@ if __name__ == '__main__':
         normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
         normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
 
-        ref_label_filenames = sorted(glob("../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
+    else:
+        # 正常データ読み込み
+        image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
+        image_filenames = image_filenames#[:1000]
+    
+        normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
+        for index, image_filename in enumerate(image_filenames):
+            image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
+            image = cv2.resize(image,(image_file_size,image_file_size))
+            normal_images[index] = image
+        normal_images = normal_images.astype('float32') / 255
+    
+        y_normal = to_categorical([20]*len(normal_images))
+    
+        normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+        normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+
+        ref_label_filenames = sorted(glob("VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
         
         y_ref = np.zeros((5717,21),dtype=np.uint8)
         for index, ref_label_filename in enumerate(ref_label_filenames):
             df = pd.read_csv(ref_label_filename,header=None, delim_whitespace=True)
             y_ref[df.iloc[:,1]==1, index] = 1
         
-        ref_filenames=["../../models/research/deeplab/datasets/pascal_voc_seg/VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
+        ref_filenames=["VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
 
         ref_filenames=ref_filenames[:1000]
         y_ref = y_ref[:len(ref_filenames)]
@@ -179,8 +235,7 @@ if __name__ == '__main__':
         ano_images = ano_images.astype('float32') / 255
         y_ano = to_categorical([20]*len(ano_images))
         ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
-    else:
-        assert False, "No reference is indicated."
+        
 
     # テスト画像の保存
     np.save("normal_test_images.npy", normal_test_images)

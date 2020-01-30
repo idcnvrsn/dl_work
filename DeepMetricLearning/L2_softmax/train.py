@@ -117,6 +117,7 @@ def align(image, size):
     aligned_image = np.zeros((size,size,image.shape[2]), dtype=np.uint8)
     print(image.shape)
     aligned_image[0:h,0:w,:]=image
+    return aligned_image
 
 if __name__ == '__main__':
     
@@ -165,6 +166,11 @@ if __name__ == '__main__':
             catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
             imgIds = coco.getImgIds(catIds=catIds );
     
+            annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
+#            ann_num = len(annIds)
+            ann_num = 1000
+            normal_images = np.zeros((ann_num,image_file_size,image_file_size,3),dtype=np.uint8)
+            ann_index=0
             for imgId in imgIds[:1]:
                 img = coco.loadImgs([imgId])[0]
                 annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
@@ -177,7 +183,9 @@ if __name__ == '__main__':
                     h=int(ann['bbox'][3])
                     crop_image = image[y:y+h,x:x+w,:]
                     
-                    aligned_image = align(crop_image,224)
+                    aligned_image = align(crop_image,image_file_size)
+                    normal_images[ann_index,:,:,:]=aligned_image
+                    ann_index=ann_index+1
                 
             """
             annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)

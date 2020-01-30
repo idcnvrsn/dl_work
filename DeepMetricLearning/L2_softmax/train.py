@@ -140,11 +140,29 @@ if __name__ == '__main__':
         catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
         imgIds = coco.getImgIds(catIds=catIds );
 
+        for imgId in imgIds[:1]:
+            img = coco.loadImgs([imgId])[0]
+            annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
+            anns = coco.loadAnns(annIds)
+            image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
+            for ann in anns:
+                x=int(ann['bbox'][0])
+                y=int(ann['bbox'][1])
+                w=int(ann['bbox'][2])
+                h=int(ann['bbox'][3])
+                crop_image = image[y:y+h,x:x+w,:]
+            
+        """
         annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
         anns = coco.loadAnns(annIds)
         
-        for ann in anns:
+        # 指定したIDのバウンディングボックスのみを切り出し画像化する
+        for ann in anns[:1]:
             print(ann["category_id"],ann["image_id"], ann["bbox"],"\n")
+            img = coco.loadImgs(imgIds[1])
+            image = imageio.imread(args.mscoco_dir+os.sep+ann['image_id'])
+        """
+            
         
         import sys
         sys.exit()

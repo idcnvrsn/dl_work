@@ -111,6 +111,12 @@ def get_score_doc(model, x_train_normal, x_test_normal, x_test_anomaly):
 
     return Z1, Z2
 
+def align(image, size):
+    w = image.shape[1]
+    h = image.shape[0]
+    aligned_image = np.zeros((size,size,image.shape[2]), dtype=np.uint8)
+    print(image.shape)
+    aligned_image[0:h,0:w,:]=image
 
 if __name__ == '__main__':
     
@@ -131,70 +137,74 @@ if __name__ == '__main__':
 
     image_file_size = args.image_size
     
-    if args.normal_dataset[0] == "dir":
-        normal_image_dir = args.normal_dataset[0]
-    elif args.normal_dataset[0] == "coco":
-
-        coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
-        
-        catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
-        imgIds = coco.getImgIds(catIds=catIds );
-
-        for imgId in imgIds[:1]:
-            img = coco.loadImgs([imgId])[0]
-            annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
-            anns = coco.loadAnns(annIds)
-            image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
-            for ann in anns:
-                x=int(ann['bbox'][0])
-                y=int(ann['bbox'][1])
-                w=int(ann['bbox'][2])
-                h=int(ann['bbox'][3])
-                crop_image = image[y:y+h,x:x+w,:]
-            
-        """
-        annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
-        anns = coco.loadAnns(annIds)
-        
-        # 指定したIDのバウンディングボックスのみを切り出し画像化する
-        for ann in anns[:1]:
-            print(ann["category_id"],ann["image_id"], ann["bbox"],"\n")
-            img = coco.loadImgs(imgIds[1])
-            image = imageio.imread(args.mscoco_dir+os.sep+ann['image_id'])
-        """
-            
-        
-        import sys
-        sys.exit()
-
-        """
-        with open(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json","r") as f:
-            coco_ann = json.load(f)
-        
-        for ann in coco_ann["annotations"][:500]:
-            if ann['category_id'] in cat_ids:
-                assert ann['category_id'] == 2
-#                image_filenames
-                print(ann)
-                for in ann['image_id']:
-        """
     # リファレンスデータ読み込み
     if args.old_data_mode is False:
-        # 正常データ読み込み
-        image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
-        image_filenames = image_filenames#[:1000]
+        if args.normal_dataset[0] == "dir":
+            normal_image_dir = args.normal_dataset[0]
+
+            # 正常データ読み込み
+            image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
+            image_filenames = image_filenames#[:1000]
+        
+            normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
+            for index, image_filename in enumerate(image_filenames):
+                image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
+                image = cv2.resize(image,(image_file_size,image_file_size))
+                normal_images[index] = image
+            normal_images = normal_images.astype('float32') / 255
+        
+            y_normal = to_categorical([20]*len(normal_images))
+        
+            normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+            normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+
+        elif args.normal_dataset[0] == "coco":
     
-        normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
-        for index, image_filename in enumerate(image_filenames):
-            image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
-            image = cv2.resize(image,(image_file_size,image_file_size))
-            normal_images[index] = image
-        normal_images = normal_images.astype('float32') / 255
+            coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
+            
+            catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
+            imgIds = coco.getImgIds(catIds=catIds );
     
-        y_normal = to_categorical([20]*len(normal_images))
+            for imgId in imgIds[:1]:
+                img = coco.loadImgs([imgId])[0]
+                annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
+                anns = coco.loadAnns(annIds)
+                image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
+                for ann in anns:
+                    x=int(ann['bbox'][0])
+                    y=int(ann['bbox'][1])
+                    w=int(ann['bbox'][2])
+                    h=int(ann['bbox'][3])
+                    crop_image = image[y:y+h,x:x+w,:]
+                    
+                    aligned_image = align(crop_image,224)
+                
+            """
+            annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
+            anns = coco.loadAnns(annIds)
+            
+            # 指定したIDのバウンディングボックスのみを切り出し画像化する
+            for ann in anns[:1]:
+                print(ann["category_id"],ann["image_id"], ann["bbox"],"\n")
+                img = coco.loadImgs(imgIds[1])
+                image = imageio.imread(args.mscoco_dir+os.sep+ann['image_id'])
+            """
+                
+            
+            import sys
+            sys.exit()
     
-        normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
-        normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+            """
+            with open(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json","r") as f:
+                coco_ann = json.load(f)
+            
+            for ann in coco_ann["annotations"][:500]:
+                if ann['category_id'] in cat_ids:
+                    assert ann['category_id'] == 2
+    #                image_filenames
+                    print(ann)
+                    for in ann['image_id']:
+            """
 
     else:
         # 正常データ読み込み

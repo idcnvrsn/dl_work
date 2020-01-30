@@ -136,25 +136,18 @@ if __name__ == '__main__':
     elif args.normal_dataset[0] == "coco":
 
         coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
-        # display COCO categories and supercategories
-        cats = coco.loadCats(coco.getCatIds())
-        nms=[cat['name'] for cat in cats]
-        print('COCO categories: \n\n', ' '.join(nms))
         
-        nms = set([cat['supercategory'] for cat in cats])
-        print('COCO supercategories: \n', ' '.join(nms) )
-        
-#        catIds = coco.getCatIds(catNms=['dog']);
         catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
         imgIds = coco.getImgIds(catIds=catIds );
-        img = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])[0]
-#        imgs = coco.loadImgs(imgIds[np.random.randint(0,len(imgIds))])
 
         annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
         anns = coco.loadAnns(annIds)
         
         for ann in anns:
-            print(ann["image_id"],"\n")
+            print(ann["category_id"],ann["image_id"], ann["bbox"],"\n")
+        
+        import sys
+        sys.exit()
 
         """
         with open(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json","r") as f:

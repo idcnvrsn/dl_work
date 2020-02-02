@@ -138,12 +138,11 @@ if __name__ == '__main__':
 
     image_file_size = args.image_size
     
-    # リファレンスデータ読み込み
     if args.old_data_mode is False:
+        # 正常データ読み込み
         if args.normal_dataset[0] == "dir":
             normal_image_dir = args.normal_dataset[0]
 
-            # 正常データ読み込み
             image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
             image_filenames = image_filenames#[:1000]
         
@@ -214,6 +213,9 @@ if __name__ == '__main__':
         
             normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
             normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+
+        # リファレンスデータ読み込み
+
 
             import sys
             sys.exit()

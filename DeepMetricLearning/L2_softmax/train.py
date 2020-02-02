@@ -176,44 +176,48 @@ if __name__ == '__main__':
                 annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
                 anns = coco.loadAnns(annIds)
                 image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
-                for ann in anns:
+                for ann_index,ann in enumerate(anns):
                     x=int(ann['bbox'][0])
                     y=int(ann['bbox'][1])
                     w=int(ann['bbox'][2])
                     h=int(ann['bbox'][3])
-                    crop_image = image[y:y+h,x:x+w,:]
                     
-                    aligned_image = align(crop_image,image_file_size)
-                    normal_images[ann_index,:,:,:]=aligned_image
-                    ann_index=ann_index+1
-                
-            """
-            annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
-            anns = coco.loadAnns(annIds)
-            
-            # 指定したIDのバウンディングボックスのみを切り出し画像化する
-            for ann in anns[:1]:
-                print(ann["category_id"],ann["image_id"], ann["bbox"],"\n")
-                img = coco.loadImgs(imgIds[1])
-                image = imageio.imread(args.mscoco_dir+os.sep+ann['image_id'])
-            """
-                
-            
+                    half_w = int(w/2)
+                    half_h = int(h/2)
+                    
+                    cx = x+half_w
+                    cy = y+half_h
+
+                    lt_x = cx - int(args.image_size/2)
+                    if lt_x < 0:
+                        lt_x = 0
+                    lt_y = cy - int(args.image_size/2)
+                    if lt_y < 0:
+                        lt_y = 0
+                    rb_x = cx + int(args.image_size/2)
+                    if rb_x > image.shape[1]:
+                        rb_x =image.shape[1]
+                    rb_y = cy + int(args.image_size/2)
+                    if rb_y > image.shape[0]:
+                        rb_y =image.shape[0]
+
+                    crop_image = image[lt_y:rb_y,lt_x:rb_x,:]
+                    crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)
+                    
+                    crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
+                    
+                    normal_images[ann_index] = crop_image_norm
+
+            normal_images = normal_images.astype('float32') / 255
+        
+            y_normal = to_categorical([0]*len(normal_images))
+        
+            normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+            normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+
             import sys
             sys.exit()
     
-            """
-            with open(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json","r") as f:
-                coco_ann = json.load(f)
-            
-            for ann in coco_ann["annotations"][:500]:
-                if ann['category_id'] in cat_ids:
-                    assert ann['category_id'] == 2
-    #                image_filenames
-                    print(ann)
-                    for in ann['image_id']:
-            """
-
     else:
         # 正常データ読み込み
         image_filenames = glob(normal_image_dir+os.sep+"*.jpg")

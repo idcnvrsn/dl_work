@@ -28,6 +28,7 @@ from sklearn.metrics import confusion_matrix
 from time import time
 import argparse
 import os
+import shutil
 import json
 from pycocotools.coco import COCO
 
@@ -119,6 +120,14 @@ def align(image, size):
     aligned_image[0:h,0:w,:]=image
     return aligned_image
 
+def save_images(images):
+    output_dir = "save_images"
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
+#    imageio.imwrite("")
+
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
@@ -132,6 +141,7 @@ if __name__ == '__main__':
     parser.add_argument('--mscoco_annotations_dir', default="annotations_trainval2017",help="mscocoデータセットのアノテーションディレクトリ")
     parser.add_argument('--pascal_voc_dir', default="VOCdevkit/VOC2012")
     parser.add_argument('-od', '--old_data_mode', action='store_true',help='データセットの指定モードを古い要領で行う場合')
+    parser.add_argument('--save_img', action='store_true',help='クロップ画像の保存を行う場合')
     
     args = parser.parse_args()
     print(args)
@@ -206,6 +216,9 @@ if __name__ == '__main__':
                     crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
                     
                     normal_images[ann_index] = crop_image_norm
+
+            if args.save_img:
+                save_images(normal_images)
 
             normal_images = normal_images.astype('float32') / 255
         

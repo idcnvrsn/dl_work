@@ -151,6 +151,13 @@ def crop(image,x,y,w,h,image_size):
 
     return image[lt_y:rb_y,lt_x:rb_x,:]
 
+def to3ch(image):
+    image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.uint8)
+    image_[:,:,0] = image
+    image_[:,:,1] = image
+    image_[:,:,2] = image
+    return image_
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
@@ -210,11 +217,7 @@ if __name__ == '__main__':
                     img = coco.loadImgs([ann["image_id"]])[0]
                     image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
                     if len(image.shape) == 2:
-                        image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.uint8)
-                        image_[:,:,0] = image
-                        image_[:,:,1] = image
-                        image_[:,:,2] = image
-                        image = image_
+                        image = to3ch(image)
                     
                     x=int(ann['bbox'][0])
                     y=int(ann['bbox'][1])

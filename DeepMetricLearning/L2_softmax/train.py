@@ -125,8 +125,8 @@ def save_images(images):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
-#    imageio.imwrite("")
-
+    for index, image in enumerate(images):
+        imageio.imwrite(output_dir+os.sep+str(index)+".jpg", image)
 
 if __name__ == '__main__':
     
@@ -180,11 +180,17 @@ if __name__ == '__main__':
             ann_num = 1000
             normal_images = np.zeros((ann_num,image_file_size,image_file_size,3),dtype=np.uint8)
             ann_index=0
-            for imgId in imgIds[:1]:
+            for imgId in imgIds:
                 img = coco.loadImgs([imgId])[0]
                 annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
                 anns = coco.loadAnns(annIds)
                 image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
+                if len(image.shape) == 2:
+                    image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.float32)
+                    image_[:,:,0] = image
+                    image_[:,:,1] = image
+                    image_[:,:,2] = image
+                    image = image_
                 for ann_index,ann in enumerate(anns):
                     x=int(ann['bbox'][0])
                     y=int(ann['bbox'][1])

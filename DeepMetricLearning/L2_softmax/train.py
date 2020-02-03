@@ -31,6 +31,7 @@ import os
 import shutil
 import json
 from pycocotools.coco import COCO
+from tqdm import tqdm
 
 def train_L2(x, y, classes, val_x ,val_y,epoch):
     print("L2-SoftmaxLoss training...")
@@ -180,7 +181,7 @@ if __name__ == '__main__':
             ann_num = 1000
             normal_images = np.zeros((ann_num,image_file_size,image_file_size,3),dtype=np.uint8)
             ann_index=0
-            for imgId in imgIds:
+            for imgId in tqdm(imgIds):
                 img = coco.loadImgs([imgId])[0]
                 annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
                 anns = coco.loadAnns(annIds)
@@ -191,7 +192,11 @@ if __name__ == '__main__':
                     image_[:,:,1] = image
                     image_[:,:,2] = image
                     image = image_
-                for ann_index,ann in enumerate(anns):
+                
+                for ann in anns:
+                    if ann_index >= ann_num:
+                        break
+
                     x=int(ann['bbox'][0])
                     y=int(ann['bbox'][1])
                     w=int(ann['bbox'][2])
@@ -222,7 +227,9 @@ if __name__ == '__main__':
                     crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
                     
                     normal_images[ann_index] = crop_image_norm
-
+                    ann_index = ann_index+1
+                    
+                    
             if args.save_img:
                 save_images(normal_images)
 

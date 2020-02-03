@@ -165,6 +165,7 @@ if __name__ == '__main__':
     parser.add_argument('--pascal_voc_dir', default="VOCdevkit/VOC2012")
     parser.add_argument('-od', '--old_data_mode', action='store_true',help='データセットの指定モードを古い要領で行う場合')
     parser.add_argument('--save_img', action='store_true',help='クロップ画像の保存を行う場合')
+    parser.add_argument('--ann_limit', default=1000, type=int, help='アノテーションの限界サイズ')
     
     args = parser.parse_args()
     print(args)
@@ -195,35 +196,42 @@ if __name__ == '__main__':
     
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
-            catIds = [int(cat_id) for cat_id in args.normal_dataset[1:] ]
-            imgIds = coco.getImgIds(catIds=catIds );
+            normal_images_list = np.empty((0,args.image_size,args.image_size,3), dtype=np.uint8)
+            for cat_id in args.normal_dataset[1:]:
+                cat_id = int(cat_id)
+                imgIds = coco.getImgIds(catIds=[cat_id] );
+                annIds = coco.getAnnIds(imgIds=imgIds, catIds=[cat_id], iscrowd=None)
+                if len(annIds) > args.ann_limit:
+                    annIds = annIds[:args.ann_limit]
+                anns = coco.loadAnns(annIds)
+                normal_images = np.zeros((len(anns),image_file_size,image_file_size,3),dtype=np.uint8)
     
-            annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
-            anns = coco.loadAnns(annIds)
-            normal_images = np.zeros((len(anns),image_file_size,image_file_size,3),dtype=np.uint8)
-
-            for ann_index,ann in enumerate(tqdm(anns)):
-                img = coco.loadImgs([ann["image_id"]])[0]
-                image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
-                if len(image.shape) == 2:
-                    image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.float32)
-                    image_[:,:,0] = image
-                    image_[:,:,1] = image
-                    image_[:,:,2] = image
-                    image = image_
-                
-                x=int(ann['bbox'][0])
-                y=int(ann['bbox'][1])
-                w=int(ann['bbox'][2])
-                h=int(ann['bbox'][3])
-                
-                crop_image = crop(image,x,y,w,h,args.image_size)
-                
-                crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)                    
-                crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
-                
-                normal_images[ann_index] = crop_image_norm
+                for ann_index,ann in enumerate(tqdm(anns)):
+                    img = coco.loadImgs([ann["image_id"]])[0]
+                    image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
+                    if len(image.shape) == 2:
+                        image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.uint8)
+                        image_[:,:,0] = image
+                        image_[:,:,1] = image
+                        image_[:,:,2] = image
+                        image = image_
                     
+                    x=int(ann['bbox'][0])
+                    y=int(ann['bbox'][1])
+                    w=int(ann['bbox'][2])
+                    h=int(ann['bbox'][3])
+                    
+                    crop_image = crop(image,x,y,w,h,args.image_size)
+                    
+                    crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)                    
+                    crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
+                    
+                    normal_images[ann_index] = crop_image_norm
+
+                normal_images_list=np.vstack([normal_images_list,normal_images])
+            
+            normal_images = normal_images_list
+            
             if args.save_img:
                 save_images(normal_images)
 

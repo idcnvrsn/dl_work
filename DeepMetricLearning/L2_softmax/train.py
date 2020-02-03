@@ -215,7 +215,7 @@ if __name__ == '__main__':
     if args.old_data_mode is False:
         # 正常データ読み込み
         if args.normal_dataset[0] == "dir":
-            normal_image_dir = args.normal_dataset[0]
+            normal_image_dir = args.normal_dataset[1]
 
             image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
             image_filenames = image_filenames#[:1000]

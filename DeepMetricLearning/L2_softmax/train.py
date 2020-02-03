@@ -129,6 +129,28 @@ def save_images(images):
     for index, image in enumerate(images):
         imageio.imwrite(output_dir+os.sep+str(index)+".jpg", image)
 
+def crop(image,x,y,w,h,image_size):
+    half_w = int(w/2)
+    half_h = int(h/2)
+    
+    cx = x+half_w
+    cy = y+half_h
+
+    lt_x = cx - int(image_size/2)
+    if lt_x < 0:
+        lt_x = 0
+    lt_y = cy - int(image_size/2)
+    if lt_y < 0:
+        lt_y = 0
+    rb_x = cx + int(image_size/2)
+    if rb_x > image.shape[1]:
+        rb_x =image.shape[1]
+    rb_y = cy + int(image_size/2)
+    if rb_y > image.shape[0]:
+        rb_y =image.shape[0]
+
+    return image[lt_y:rb_y,lt_x:rb_x,:]
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
@@ -202,26 +224,8 @@ if __name__ == '__main__':
                     w=int(ann['bbox'][2])
                     h=int(ann['bbox'][3])
                     
-                    half_w = int(w/2)
-                    half_h = int(h/2)
+                    crop_image = crop(image,x,y,w,h,args.image_size)
                     
-                    cx = x+half_w
-                    cy = y+half_h
-
-                    lt_x = cx - int(args.image_size/2)
-                    if lt_x < 0:
-                        lt_x = 0
-                    lt_y = cy - int(args.image_size/2)
-                    if lt_y < 0:
-                        lt_y = 0
-                    rb_x = cx + int(args.image_size/2)
-                    if rb_x > image.shape[1]:
-                        rb_x =image.shape[1]
-                    rb_y = cy + int(args.image_size/2)
-                    if rb_y > image.shape[0]:
-                        rb_y =image.shape[0]
-
-                    crop_image = image[lt_y:rb_y,lt_x:rb_x,:]
                     crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)
                     
                     crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image

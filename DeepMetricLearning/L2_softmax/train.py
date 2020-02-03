@@ -158,6 +158,39 @@ def to3ch(image):
     image_[:,:,2] = image
     return image_
 
+def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
+    
+    normal_images_list = np.empty((0,image_file_size,image_file_size,3), dtype=np.uint8)
+    for cat_id in ids:
+        imgIds = coco.getImgIds(catIds=[cat_id] );
+        annIds = coco.getAnnIds(imgIds=imgIds, catIds=[cat_id], iscrowd=None)
+        if len(annIds) > ann_limit:
+            annIds = annIds[:ann_limit]
+        anns = coco.loadAnns(annIds)
+        normal_images = np.zeros((len(anns),image_file_size,image_file_size,3),dtype=np.uint8)
+
+        for ann_index,ann in enumerate(tqdm(anns)):
+            img = coco.loadImgs([ann["image_id"]])[0]
+            image = imageio.imread(mscoco_dir+os.sep+img['file_name'])
+            if len(image.shape) == 2:
+                image = to3ch(image)
+            
+            x=int(ann['bbox'][0])
+            y=int(ann['bbox'][1])
+            w=int(ann['bbox'][2])
+            h=int(ann['bbox'][3])
+            
+            crop_image = crop(image,x,y,w,h,args.image_size)
+            
+            crop_image_norm = np.zeros((image_file_size,image_file_size,image.shape[2]), dtype=np.uint8)                    
+            crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
+            
+            normal_images[ann_index] = crop_image_norm
+
+        normal_images_list=np.vstack([normal_images_list,normal_images])
+    
+    return normal_images_list
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
@@ -203,37 +236,8 @@ if __name__ == '__main__':
     
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
-            normal_images_list = np.empty((0,args.image_size,args.image_size,3), dtype=np.uint8)
-            for cat_id in args.normal_dataset[1:]:
-                cat_id = int(cat_id)
-                imgIds = coco.getImgIds(catIds=[cat_id] );
-                annIds = coco.getAnnIds(imgIds=imgIds, catIds=[cat_id], iscrowd=None)
-                if len(annIds) > args.ann_limit:
-                    annIds = annIds[:args.ann_limit]
-                anns = coco.loadAnns(annIds)
-                normal_images = np.zeros((len(anns),image_file_size,image_file_size,3),dtype=np.uint8)
-    
-                for ann_index,ann in enumerate(tqdm(anns)):
-                    img = coco.loadImgs([ann["image_id"]])[0]
-                    image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
-                    if len(image.shape) == 2:
-                        image = to3ch(image)
-                    
-                    x=int(ann['bbox'][0])
-                    y=int(ann['bbox'][1])
-                    w=int(ann['bbox'][2])
-                    h=int(ann['bbox'][3])
-                    
-                    crop_image = crop(image,x,y,w,h,args.image_size)
-                    
-                    crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)                    
-                    crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
-                    
-                    normal_images[ann_index] = crop_image_norm
-
-                normal_images_list=np.vstack([normal_images_list,normal_images])
-            
-            normal_images = normal_images_list
+            ids = [int(_id) for _id in args.normal_dataset[1:] ]
+            normal_images = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
                 save_images(normal_images)

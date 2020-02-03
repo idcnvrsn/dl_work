@@ -199,14 +199,11 @@ if __name__ == '__main__':
             imgIds = coco.getImgIds(catIds=catIds );
     
             annIds = coco.getAnnIds(imgIds=imgIds, catIds=catIds, iscrowd=None)
-#            ann_num = len(annIds)
-            ann_num = 1000
-            normal_images = np.zeros((ann_num,image_file_size,image_file_size,3),dtype=np.uint8)
-            ann_index=0
-            for imgId in tqdm(imgIds):
-                img = coco.loadImgs([imgId])[0]
-                annIds = coco.getAnnIds(imgIds=[imgId], catIds=catIds, iscrowd=None)
-                anns = coco.loadAnns(annIds)
+            anns = coco.loadAnns(annIds)
+            normal_images = np.zeros((len(anns),image_file_size,image_file_size,3),dtype=np.uint8)
+
+            for ann_index,ann in enumerate(tqdm(anns)):
+                img = coco.loadImgs([ann["image_id"]])[0]
                 image = imageio.imread(args.mscoco_dir+os.sep+img['file_name'])
                 if len(image.shape) == 2:
                     image_ = np.zeros((image.shape[0],image.shape[1],3),dtype=np.float32)
@@ -215,24 +212,17 @@ if __name__ == '__main__':
                     image_[:,:,2] = image
                     image = image_
                 
-                for ann in anns:
-                    if ann_index >= ann_num:
-                        break
-
-                    x=int(ann['bbox'][0])
-                    y=int(ann['bbox'][1])
-                    w=int(ann['bbox'][2])
-                    h=int(ann['bbox'][3])
-                    
-                    crop_image = crop(image,x,y,w,h,args.image_size)
-                    
-                    crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)
-                    
-                    crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
-                    
-                    normal_images[ann_index] = crop_image_norm
-                    ann_index = ann_index+1
-                    
+                x=int(ann['bbox'][0])
+                y=int(ann['bbox'][1])
+                w=int(ann['bbox'][2])
+                h=int(ann['bbox'][3])
+                
+                crop_image = crop(image,x,y,w,h,args.image_size)
+                
+                crop_image_norm = np.zeros((args.image_size,args.image_size,image.shape[2]), dtype=np.uint8)                    
+                crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
+                
+                normal_images[ann_index] = crop_image_norm
                     
             if args.save_img:
                 save_images(normal_images)

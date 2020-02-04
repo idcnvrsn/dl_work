@@ -121,8 +121,7 @@ def align(image, size):
     aligned_image[0:h,0:w,:]=image
     return aligned_image
 
-def save_images(images):
-    output_dir = "save_images"
+def save_images(images, output_dir):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
@@ -242,7 +241,7 @@ if __name__ == '__main__':
             normal_images , y_normal = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
-                save_images(normal_images)
+                save_images(normal_images,"normal_images")
 
             normal_images = normal_images.astype('float32') / 255
         

@@ -375,6 +375,7 @@ if __name__ == '__main__':
     #最終層削除
     model.layers.pop()
     model_ev = Model(inputs=model.input,outputs=model.layers[-1].output)
+    print("scoring...")
     Z1_L2, Z2_L2 = get_score_doc(model_ev, normal_train_images, normal_test_images, ano_test_images)
 
     auc(Z1_L2, Z2_L2)

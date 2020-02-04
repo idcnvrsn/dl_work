@@ -160,7 +160,7 @@ def to3ch(image):
 def load_from_dir(image_dirs,image_size):
     t = []
     
-    for dir_index, image_dir in image_dirs:
+    for dir_index, image_dir in enumerate(image_dirs):
         image_filenames = glob(image_dir+os.sep+"*.jpg")
         image_filenames = image_filenames#[:1000]
     
@@ -243,8 +243,8 @@ if __name__ == '__main__':
             ids = [int(_id) for _id in args.normal_dataset[1:] ]
             normal_images , y_normal, normal_freq = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
-            if args.save_img:
-                save_images(normal_images,"normal_images")
+        if args.save_img:
+            save_images(normal_images,"normal_images")
 
         normal_images = normal_images.astype('float32') / 255
         y_normal = to_categorical(y_normal)
@@ -263,14 +263,14 @@ if __name__ == '__main__':
             ids = [int(_id) for _id in args.ref_dataset[1:] ]
             ref_images , y_ref, ref_freqs = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
-            if args.save_img:
-                save_images(ref_images,"ref_images")
+        if args.save_img:
+            save_images(ref_images,"ref_images")
 
-            ref_images = ref_images.astype('float32') / 255
-            y_ref = to_categorical(y_ref)
+        ref_images = ref_images.astype('float32') / 255
+        y_ref = to_categorical(y_ref)
 
-            ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
-            ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
+        ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
+        ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
 
         # テストデータ(異常)読み込み
         if args.anomaly_dataset[0] == "dir":
@@ -283,12 +283,12 @@ if __name__ == '__main__':
             ids = [int(_id) for _id in args.anomaly_dataset[1:] ]
             ano_images , y_ano, ano_freqs = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
-            if args.save_img:
-                save_images(ano_images,"ano_images")
+        if args.save_img:
+            save_images(ano_images,"ano_images")
 
-            ano_images = ano_images.astype('float32') / 255
-            y_ano = to_categorical(y_ano)
-            ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
+        ano_images = ano_images.astype('float32') / 255
+        y_ano = to_categorical(y_ano)
+        ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
     
     else:
         # 正常データ読み込み

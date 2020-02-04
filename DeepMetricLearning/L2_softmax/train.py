@@ -35,7 +35,7 @@ import json
 from pycocotools.coco import COCO
 from tqdm import tqdm
 
-def train_L2(x, y, classes, val_x ,val_y,epoch):
+def train_L2(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
 #    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
 #                         weights='imagenet')
@@ -58,7 +58,7 @@ def train_L2(x, y, classes, val_x ,val_y,epoch):
                   metrics=['accuracy'])
 
     #学習
-    hist = model.fit(x, y, batch_size=24, epochs=epoch, verbose = 1, validation_data=(val_x,val_y))
+    hist = model.fit(x, y, batch_size=batch_size, epochs=epoch, verbose = 1, validation_data=(val_x,val_y))
 
     #plt.figure()               
     #plt.plot(hist.history['acc'],label="train_acc")
@@ -224,7 +224,8 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--anomaly_dataset', nargs="*",default=["dir","images_labels_ano/images"], help='異常画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-r', '--ref_dataset', nargs="*",default=["dir","images_labels_ref/images"], help='リファレンス画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-e', '--epoch', default=30, type=int, help='学習する最大エポック数')
-    parser.add_argument('-s', '--image_size', default=224, type=int, help='学習時画像サイズ')
+    parser.add_argument('-b', '--batch_size', default=24, type=int, help='学習する最大エポック数')
+    parser.add_argument('-s', '--image_size', default=224, type=int, help='学習時バッチサイズ')
     parser.add_argument('--mscoco_dir', default="val2017",help="mscocoデータセットのディレクトリ")
     parser.add_argument('--mscoco_annotations_dir', default="annotations_trainval2017",help="mscocoデータセットのアノテーションディレクトリ")
     parser.add_argument('--pascal_voc_dir', default="VOCdevkit/VOC2012")
@@ -374,7 +375,7 @@ if __name__ == '__main__':
 
     #L2-SoftmaxLoss
     model = train_L2(np.vstack((normal_train_images, ref_train_images)), np.vstack((y_normal_train, y_ref_train)), y_ref_train.shape[1],
-                     np.vstack((normal_val_images,ref_val_images)), np.vstack((y_normal_val,y_ref_val)), args.epoch )
+                     np.vstack((normal_val_images,ref_val_images)), np.vstack((y_normal_val,y_ref_val)), args.epoch ,args.batch_size)
 
     model.save("model.hdf5")
 

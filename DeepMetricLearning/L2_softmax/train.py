@@ -13,6 +13,8 @@ import imageio
 import cv2
 import keras
 from keras.applications import MobileNetV2
+from keras.applications.xception import Xception
+from keras.applications.nasnet import NASNetLarge
 from keras.optimizers import Adam, SGD
 from keras.models import Model
 from keras import backend as K
@@ -35,9 +37,11 @@ from tqdm import tqdm
 
 def train_L2(x, y, classes, val_x ,val_y,epoch):
     print("L2-SoftmaxLoss training...")
-    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
-                         weights='imagenet')
-    
+#    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
+#                         weights='imagenet')
+#    mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+    mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+   
     # 最終層削除
     mobile.layers.pop()
     model = Model(inputs=mobile.input,outputs=mobile.layers[-1].output)
@@ -159,6 +163,7 @@ def to3ch(image):
 
 def load_from_dir(image_dirs,image_size):
     t = []
+    freqs = []
     
     for dir_index, image_dir in enumerate(image_dirs):
         image_filenames = glob(image_dir+os.sep+"*.jpg")
@@ -170,8 +175,9 @@ def load_from_dir(image_dirs,image_size):
             image = cv2.resize(image,(image_size,image_size))
             normal_images[index] = image
         t.extend([dir_index]*len(image_filenames))
+        freqs.append(len(image_filenames))
 
-    return normal_images, t
+    return normal_images, t, freqs
 
 def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
     t = []

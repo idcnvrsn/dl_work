@@ -159,9 +159,9 @@ def to3ch(image):
     return image_
 
 def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
-    
+    t = []
     normal_images_list = np.empty((0,image_file_size,image_file_size,3), dtype=np.uint8)
-    for cat_id in ids:
+    for index, cat_id in enumerate(ids):
         imgIds = coco.getImgIds(catIds=[cat_id] );
         annIds = coco.getAnnIds(imgIds=imgIds, catIds=[cat_id], iscrowd=None)
         if len(annIds) > ann_limit:
@@ -186,10 +186,12 @@ def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
             crop_image_norm[0:crop_image.shape[0],0:crop_image.shape[1],:] = crop_image
             
             normal_images[ann_index] = crop_image_norm
+            
+        t.extend([index]*len(anns))
 
         normal_images_list=np.vstack([normal_images_list,normal_images])
     
-    return normal_images_list
+    return normal_images_list, t
 
 if __name__ == '__main__':
     
@@ -237,14 +239,14 @@ if __name__ == '__main__':
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
             ids = [int(_id) for _id in args.normal_dataset[1:] ]
-            normal_images = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
+            normal_images , y_normal = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
                 save_images(normal_images)
 
             normal_images = normal_images.astype('float32') / 255
         
-            y_normal = to_categorical([0]*len(normal_images))
+            y_normal = to_categorical(y_normal)
         
             normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
             normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)

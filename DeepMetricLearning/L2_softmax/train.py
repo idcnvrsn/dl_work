@@ -157,6 +157,22 @@ def to3ch(image):
     image_[:,:,2] = image
     return image_
 
+def load_from_dir(image_dirs,image_size):
+    t = []
+    
+    for dir_index, image_dir in image_dirs:
+        image_filenames = glob(image_dir+os.sep+"*.jpg")
+        image_filenames = image_filenames#[:1000]
+    
+        normal_images = np.zeros((len(image_filenames),image_size,image_size,3),dtype=np.uint8)
+        for index, image_filename in enumerate(image_filenames):
+            image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
+            image = cv2.resize(image,(image_size,image_size))
+            normal_images[index] = image
+        t.extend([dir_index]*len(image_filenames))
+
+    return normal_images, t
+
 def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
     t = []
     normal_images_list = np.empty((0,image_file_size,image_file_size,3), dtype=np.uint8)
@@ -216,19 +232,10 @@ if __name__ == '__main__':
     if args.old_data_mode is False:
         # 正常データ読み込み
         if args.normal_dataset[0] == "dir":
-            normal_image_dir = args.normal_dataset[1]
+            normal_images, y_normal = load_from_dir(args.normal_dataset[1:],args.image_size)
 
-            image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
-            image_filenames = image_filenames#[:1000]
-        
-            normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
-            for index, image_filename in enumerate(image_filenames):
-                image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
-                image = cv2.resize(image,(image_file_size,image_file_size))
-                normal_images[index] = image
             normal_images = normal_images.astype('float32') / 255
-        
-            y_normal = to_categorical([20]*len(normal_images))
+            y_normal = to_categorical(y_normal)
         
             normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
             normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)

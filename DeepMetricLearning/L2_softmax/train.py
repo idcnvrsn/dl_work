@@ -234,12 +234,6 @@ if __name__ == '__main__':
         if args.normal_dataset[0] == "dir":
             normal_images, y_normal = load_from_dir(args.normal_dataset[1:],args.image_size)
 
-            normal_images = normal_images.astype('float32') / 255
-            y_normal = to_categorical(y_normal)
-        
-            normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
-            normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
-
         elif args.normal_dataset[0] == "coco":
     
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
@@ -250,18 +244,17 @@ if __name__ == '__main__':
             if args.save_img:
                 save_images(normal_images,"normal_images")
 
-            normal_images = normal_images.astype('float32') / 255
-        
-            y_normal = to_categorical(y_normal)
-        
-            normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
-            normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+        normal_images = normal_images.astype('float32') / 255
+        y_normal = to_categorical(y_normal)
+    
+        normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+        normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
 
         # リファレンスデータ読み込み
 
 
-            import sys
-            sys.exit()
+        import sys
+        sys.exit()
     
     else:
         # 正常データ読み込み

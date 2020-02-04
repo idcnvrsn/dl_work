@@ -35,7 +35,7 @@ import json
 from pycocotools.coco import COCO
 from tqdm import tqdm
 
-def train_L2(x, y, classes, val_x ,val_y,epoch,batch_size):
+def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
 #    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
 #                         weights='imagenet')
@@ -374,7 +374,7 @@ if __name__ == '__main__':
     np.save("ano_test_images.npy", ano_test_images)
 
     #L2-SoftmaxLoss
-    model = train_L2(np.vstack((normal_train_images, ref_train_images)), np.vstack((y_normal_train, y_ref_train)), y_ref_train.shape[1],
+    model = train(np.vstack((normal_train_images, ref_train_images)), np.vstack((y_normal_train, y_ref_train)), y_ref_train.shape[1],
                      np.vstack((normal_val_images,ref_val_images)), np.vstack((y_normal_val,y_ref_val)), args.epoch ,args.batch_size)
 
     model.save("model.hdf5")

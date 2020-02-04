@@ -292,14 +292,14 @@ if __name__ == '__main__':
         y_ano = to_categorical(y_ano)
     
     else:
-        ref_label_filenames = sorted(glob("VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
+        ref_label_filenames = sorted(glob(args.pascal_voc_dir+os.sep+"ImageSets/Main/*_train.txt"))
         
         y_ref = np.zeros((5717,21),dtype=np.uint8)
         for index, ref_label_filename in enumerate(ref_label_filenames):
             df = pd.read_csv(ref_label_filename,header=None, delim_whitespace=True)
             y_ref[df.iloc[:,1]==1, index] = 1
         
-        ref_filenames=["VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
+        ref_filenames=[args.pascal_voc_dir+os.sep+"JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
 
         ref_filenames=ref_filenames[:1000]
         y_ref = y_ref[:len(ref_filenames)]

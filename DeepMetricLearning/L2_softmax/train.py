@@ -265,6 +265,8 @@ if __name__ == '__main__':
                 save_images(ref_images,"ref_images")
 
             ref_images = ref_images.astype('float32') / 255
+            y_ref = to_categorical(y_ref)
+
             ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
             ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
 
@@ -283,6 +285,7 @@ if __name__ == '__main__':
                 save_images(ano_images,"ano_images")
 
             ano_images = ano_images.astype('float32') / 255
+            y_ano = to_categorical(y_ano)
             ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
     
     else:

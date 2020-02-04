@@ -224,7 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--anomaly_dataset', nargs="*",default=["dir","images_labels_ano/images"], help='異常画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-r', '--ref_dataset', nargs="*",default=["dir","images_labels_ref/images"], help='リファレンス画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-e', '--epoch', default=30, type=int, help='学習する最大エポック数')
-    parser.add_argument('-b', '--batch_size', default=24, type=int, help='学習する最大エポック数')
+    parser.add_argument('-b', '--batch_size', default=24, type=int, help='学習するバッチサイズ')
     parser.add_argument('-s', '--image_size', default=224, type=int, help='学習時バッチサイズ')
     parser.add_argument('--mscoco_dir', default="val2017",help="mscocoデータセットのディレクトリ")
     parser.add_argument('--mscoco_annotations_dir', default="annotations_trainval2017",help="mscocoデータセットのアノテーションディレクトリ")

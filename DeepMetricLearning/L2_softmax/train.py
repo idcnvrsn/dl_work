@@ -379,6 +379,8 @@ if __name__ == '__main__':
     Z1_L2, Z2_L2 = get_score_doc(model_ev, normal_train_images, normal_test_images, ano_test_images)
 
     auc(Z1_L2, Z2_L2)
+    plt.savefig("AUC.png")
+    plt.clf()
 
     model_ev.save("model_ev.hdf5")
 
@@ -401,6 +403,8 @@ if __name__ == '__main__':
     plt.legend(loc='best')
 #    target = np.hstack(([0]*pred_normal_test.shape[0],[1]*pred_ref_test.shape[0],[2]*pred_ano_test.shape[0]))
 #    plt.scatter(X_reduced[:, 0], X_reduced[:, 1], s=3,c=target)
+
+    plt.savefig("distribution.png")
 
     # kNNを使って距離空間で分類器を学習する
     print("kNN Classification on feature space...")

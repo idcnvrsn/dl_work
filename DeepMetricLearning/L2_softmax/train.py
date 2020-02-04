@@ -241,7 +241,7 @@ if __name__ == '__main__':
     if args.old_data_mode is False:
         # 正常データ読み込み
         if args.normal_dataset[0] == "dir":
-            normal_images, y_normal = load_from_dir(args.normal_dataset[1:],args.image_size)
+            normal_images, y_normal, normal_freqs = load_from_dir(args.normal_dataset[1:],args.image_size)
 
         elif args.normal_dataset[0] == "coco":
     
@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
         # リファレンスデータ読み込み
         if args.ref_dataset[0] == "dir":
-            ref_images, y_ref = load_from_dir(args.ref_dataset[1:],args.image_size)
+            ref_images, y_ref, ref_freqs = load_from_dir(args.ref_dataset[1:],args.image_size)
 
         elif args.ref_dataset[0] == "coco":
     
@@ -276,7 +276,7 @@ if __name__ == '__main__':
 
         # テストデータ(異常)読み込み
         if args.anomaly_dataset[0] == "dir":
-            ano_images, y_ano = load_from_dir(args.anomaly_dataset[1:],args.image_size)
+            ano_images, y_ano, ano_freqs = load_from_dir(args.anomaly_dataset[1:],args.image_size)
 
         elif args.anomaly_dataset[0] == "coco":
     

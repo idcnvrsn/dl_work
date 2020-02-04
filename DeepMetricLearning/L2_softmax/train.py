@@ -175,6 +175,7 @@ def load_from_dir(image_dirs,image_size):
 
 def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
     t = []
+    freqs = []
     normal_images_list = np.empty((0,image_file_size,image_file_size,3), dtype=np.uint8)
     for index, cat_id in enumerate(ids):
         imgIds = coco.getImgIds(catIds=[cat_id] );
@@ -203,10 +204,11 @@ def load_from_coco(ids,coco,image_file_size,ann_limit,mscoco_dir):
             normal_images[ann_index] = crop_image_norm
             
         t.extend([index]*len(anns))
+        freqs.append(len(anns))
 
         normal_images_list=np.vstack([normal_images_list,normal_images])
     
-    return normal_images_list, t
+    return normal_images_list, t, freqs
 
 if __name__ == '__main__':
     
@@ -239,7 +241,7 @@ if __name__ == '__main__':
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
             ids = [int(_id) for _id in args.normal_dataset[1:] ]
-            normal_images , y_normal = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
+            normal_images , y_normal, normal_freq = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
                 save_images(normal_images,"normal_images")
@@ -259,7 +261,7 @@ if __name__ == '__main__':
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
             ids = [int(_id) for _id in args.ref_dataset[1:] ]
-            ref_images , y_ref = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
+            ref_images , y_ref, ref_freqs = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
                 save_images(ref_images,"ref_images")
@@ -279,7 +281,7 @@ if __name__ == '__main__':
             coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
             
             ids = [int(_id) for _id in args.anomaly_dataset[1:] ]
-            ano_images , y_ano = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
+            ano_images , y_ano, ano_freqs = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
             
             if args.save_img:
                 save_images(ano_images,"ano_images")

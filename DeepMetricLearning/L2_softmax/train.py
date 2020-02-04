@@ -249,8 +249,6 @@ if __name__ == '__main__':
         normal_images = normal_images.astype('float32') / 255
         y_normal = to_categorical(y_normal)
     
-        normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
-        normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
 
         # リファレンスデータ読み込み
         if args.ref_dataset[0] == "dir":
@@ -269,9 +267,6 @@ if __name__ == '__main__':
         ref_images = ref_images.astype('float32') / 255
         y_ref = to_categorical(y_ref)
 
-        ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
-        ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
-
         # テストデータ(異常)読み込み
         if args.anomaly_dataset[0] == "dir":
             ano_images, y_ano = load_from_dir(args.anomaly_dataset[1:],args.image_size)
@@ -288,7 +283,6 @@ if __name__ == '__main__':
 
         ano_images = ano_images.astype('float32') / 255
         y_ano = to_categorical(y_ano)
-        ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
     
     else:
         # 正常データ読み込み
@@ -341,6 +335,31 @@ if __name__ == '__main__':
         y_ano = to_categorical([20]*len(ano_images))
         ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
         
+    # 3種類のyについて幅を合わせる
+    # normal
+    y_zero = np.zeros((y_normal.shape[0],(y_ref.shape[1]+y_ano.shape[1]) ),dtype=np.float32)
+    y_normal_ = np.hstack([y_normal,y_zero])
+
+    # ref
+    y_zero = np.zeros((y_ref.shape[0],y_normal.shape[1]),dtype=np.float32)
+    y_ref_ = np.hstack([y_zero,y_ref])
+    y_zero = np.zeros((y_ref_.shape[0],y_ano.shape[1]),dtype=np.float32)
+    y_ref_ = np.hstack([y_ref_,y_zero])
+
+    # ano
+    y_zero = np.zeros((y_ano.shape[0], (y_normal.shape[1]+y_ref.shape[1]) ),dtype=np.float32)
+    y_ano_ = np.hstack([y_zero,y_ano])
+    
+    y_normal = y_normal_
+    y_ref = y_ref_
+    y_ano = y_ano_
+
+    # train,val,testに分割する
+    normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+    normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+    ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
+    ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
+    ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
 
     # テスト画像の保存
     np.save("normal_test_images.npy", normal_test_images)

@@ -284,9 +284,6 @@ if __name__ == '__main__':
 
             ano_images = ano_images.astype('float32') / 255
             ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
-
-        import sys
-        sys.exit()
     
     else:
         # 正常データ読み込み

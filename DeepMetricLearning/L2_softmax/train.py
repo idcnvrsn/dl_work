@@ -251,7 +251,24 @@ if __name__ == '__main__':
         normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
 
         # リファレンスデータ読み込み
+        if args.ref_dataset[0] == "dir":
+            ref_images, y_ref = load_from_dir(args.ref_dataset[1:],args.image_size)
 
+        elif args.ref_dataset[0] == "coco":
+    
+            coco=COCO(args.mscoco_annotations_dir+os.sep+"annotations/instances_val2017.json")
+            
+            ids = [int(_id) for _id in args.ref_dataset[1:] ]
+            ref_images , y_ref = load_from_coco(ids,coco,args.image_size,args.ann_limit,args.mscoco_dir)
+            
+            if args.save_img:
+                save_images(ref_images,"ref_images")
+
+            ref_images = ref_images.astype('float32') / 255
+            ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
+            ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
+
+        # テストデータ(異常)読み込み
 
         import sys
         sys.exit()

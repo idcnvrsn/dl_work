@@ -37,10 +37,9 @@ from tqdm import tqdm
 
 def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
-#    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5,
-#                         weights='imagenet')
-#    mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
-    mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+#    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5, weights='imagenet')
+    mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+#    mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
    
     # 最終層削除
     mobile.layers.pop()
@@ -220,11 +219,11 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='L2-softmaxを使ったDeep Metric Learning',fromfile_prefix_chars='@')
 
-    parser.add_argument('-n', '--normal_dataset', nargs="*",default=["dir","images_labels_normal/images"], help='正常画像を指定する。冒頭がdirでディレクトリ指定(クラスは１つとして扱う。例 -n dir dataset/image)。冒頭がcocoでcocoのid指定(-n coco 2,6)。')
+    parser.add_argument('-n', '--normal_dataset', nargs="*",default=["dir","images_labels_normal/images"], help='正常画像を指定する。冒頭がdirでディレクトリ指定(クラスは１つとして扱う。例 -n dir dataset/image)。冒頭がcocoでcocoのid指定(-n coco 2 6)。')
     parser.add_argument('-a', '--anomaly_dataset', nargs="*",default=["dir","images_labels_ano/images"], help='異常画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-r', '--ref_dataset', nargs="*",default=["dir","images_labels_ref/images"], help='リファレンス画像を指定する。容量は--normal_datasetと同じ。')
     parser.add_argument('-e', '--epoch', default=30, type=int, help='学習する最大エポック数')
-    parser.add_argument('-b', '--batch_size', default=24, type=int, help='学習するバッチサイズ')
+    parser.add_argument('-b', '--batch_size', default=24, type=int, help='学習する最大エポック数')
     parser.add_argument('-s', '--image_size', default=224, type=int, help='学習時バッチサイズ')
     parser.add_argument('--mscoco_dir', default="val2017",help="mscocoデータセットのディレクトリ")
     parser.add_argument('--mscoco_annotations_dir', default="annotations_trainval2017",help="mscocoデータセットのアノテーションディレクトリ")
@@ -241,7 +240,7 @@ if __name__ == '__main__':
     if args.old_data_mode is False:
         # 正常データ読み込み
         if args.normal_dataset[0] == "dir":
-            normal_images, y_normal, normal_freqs = load_from_dir(args.normal_dataset[1:],args.image_size)
+            normal_images, y_normal, freqs = load_from_dir(args.normal_dataset[1:],args.image_size)
 
         elif args.normal_dataset[0] == "coco":
     
@@ -259,7 +258,7 @@ if __name__ == '__main__':
 
         # リファレンスデータ読み込み
         if args.ref_dataset[0] == "dir":
-            ref_images, y_ref, ref_freqs = load_from_dir(args.ref_dataset[1:],args.image_size)
+            ref_images, y_ref, freqs = load_from_dir(args.ref_dataset[1:],args.image_size)
 
         elif args.ref_dataset[0] == "coco":
     
@@ -276,7 +275,7 @@ if __name__ == '__main__':
 
         # テストデータ(異常)読み込み
         if args.anomaly_dataset[0] == "dir":
-            ano_images, y_ano, ano_freqs = load_from_dir(args.anomaly_dataset[1:],args.image_size)
+            ano_images, y_ano, freqs = load_from_dir(args.anomaly_dataset[1:],args.image_size)
 
         elif args.anomaly_dataset[0] == "coco":
     
@@ -292,14 +291,30 @@ if __name__ == '__main__':
         y_ano = to_categorical(y_ano)
     
     else:
-        ref_label_filenames = sorted(glob(args.pascal_voc_dir+os.sep+"ImageSets/Main/*_train.txt"))
+        # 正常データ読み込み
+        image_filenames = glob(normal_image_dir+os.sep+"*.jpg")
+        image_filenames = image_filenames#[:1000]
+    
+        normal_images = np.zeros((len(image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
+        for index, image_filename in enumerate(image_filenames):
+            image = imageio.imread(image_filename, as_gray=False, pilmode="RGB")
+            image = cv2.resize(image,(image_file_size,image_file_size))
+            normal_images[index] = image
+        normal_images = normal_images.astype('float32') / 255
+    
+        y_normal = to_categorical([20]*len(normal_images))
+    
+        normal_train_images, normal_test_images, y_normal_train, y_normal_test = train_test_split(normal_images, y_normal, test_size=0.2, random_state=1)
+        normal_train_images, normal_val_images, y_normal_train, y_normal_val = train_test_split(normal_train_images, y_normal_train, test_size=0.2, random_state=1)
+
+        ref_label_filenames = sorted(glob("VOCdevkit/VOC2012/ImageSets/Main/*_train.txt"))
         
         y_ref = np.zeros((5717,21),dtype=np.uint8)
         for index, ref_label_filename in enumerate(ref_label_filenames):
             df = pd.read_csv(ref_label_filename,header=None, delim_whitespace=True)
             y_ref[df.iloc[:,1]==1, index] = 1
         
-        ref_filenames=[args.pascal_voc_dir+os.sep+"JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
+        ref_filenames=["VOCdevkit/VOC2012/JPEGImages/" + v[0] + ".jpg" for (k, v) in df.iterrows()]
 
         ref_filenames=ref_filenames[:1000]
         y_ref = y_ref[:len(ref_filenames)]
@@ -313,7 +328,19 @@ if __name__ == '__main__':
         ref_images = ref_images.astype('float32') / 255
         ref_train_images, ref_test_images, y_ref_train, y_ref_test = train_test_split(ref_images, y_ref, test_size=0.2, random_state=1)
         ref_train_images, ref_val_images, y_ref_train, y_ref_val = train_test_split(ref_train_images, y_ref_train, test_size=0.2, random_state=1)
-            
+    
+        # テストデータ(異常)読み込み
+        ano_image_filenames = glob(args.anomaly_image_dir+os.sep+"*.jpg")
+        ano_images = np.zeros((len(ano_image_filenames),image_file_size,image_file_size,3),dtype=np.uint8)
+        for index, filename in enumerate(ano_image_filenames):
+            image = imageio.imread(filename, as_gray=False, pilmode="RGB")
+            image = cv2.resize(image,(image_file_size,image_file_size))
+            ano_images[index] = image
+        
+        ano_images = ano_images.astype('float32') / 255
+        y_ano = to_categorical([20]*len(ano_images))
+        ano_val_images, ano_test_images, y_ano_val, y_ano_test = train_test_split(ano_images, y_ano, test_size=0.8, random_state=1)
+        
     # 3種類のyについて幅を合わせる
     # normal
     y_zero = np.zeros((y_normal.shape[0],(y_ref.shape[1]+y_ano.shape[1]) ),dtype=np.float32)

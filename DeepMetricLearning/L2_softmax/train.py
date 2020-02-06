@@ -34,6 +34,7 @@ import shutil
 import json
 from pycocotools.coco import COCO
 from tqdm import tqdm
+from pprint import pprint
 
 def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
@@ -234,7 +235,7 @@ if __name__ == '__main__':
     parser.add_argument('--ann_limit', default=1000, type=int, help='アノテーションの限界サイズ')
     
     args = parser.parse_args()
-    print(args)
+    pprint(args.__dict__)
 
     image_file_size = args.image_size
     

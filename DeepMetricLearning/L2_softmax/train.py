@@ -128,6 +128,7 @@ def save_images(images, output_dir):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
+    print("save " + str(images.shape[0]) + " images to " + output_dir)
     for index, image in enumerate(images):
         imageio.imwrite(output_dir+os.sep+str(index)+".jpg", image)
 

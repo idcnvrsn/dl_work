@@ -38,18 +38,16 @@ from pprint import pprint
 
 def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
-#    mobile = MobileNetV2(include_top=True, input_shape=x.shape[1:], alpha=0.5, weights='imagenet')
-    mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
-#    mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
-   
-    # 最終層削除
-    mobile.layers.pop()
-    model = Model(inputs=mobile.input,outputs=mobile.layers[-1].output)
-            
-    # L2層と全結合層を付ける
-    c = keras.layers.Lambda(lambda xx: 5*(xx)/K.sqrt(K.sum(xx**2)))(model.output) #metric learning
-    c = Dense(classes, activation='softmax')(c)
-    model = Model(inputs=model.input,outputs=c)
+
+    base_model = MobileNetV2(include_top=False, input_shape=x.shape[1:], alpha=0.5, weights='imagenet')
+#    base_mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+#    base_mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+    model = Model(inputs=base_model.input, outputs=keras.layers.GlobalAveragePooling2D()(base_model.output))
+
+    alpha = 5.0
+    l2_softmax_layers = keras.layers.Lambda(lambda x: alpha*(x)/K.sqrt(K.sum(x**2)) ,name='l2_normalization_and_scale')(model.output)
+    l2_softmax_layers = Dense(classes, activation='softmax')(l2_softmax_layers)
+    model = Model(inputs=model.input, outputs=l2_softmax_layers)
 
     #model.summary()
 

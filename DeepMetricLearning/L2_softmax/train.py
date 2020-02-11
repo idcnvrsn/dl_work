@@ -30,8 +30,7 @@ def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     print("L2-SoftmaxLoss training...")
 
     base_model = MobileNetV2(include_top=False, input_shape=x.shape[1:], alpha=0.5, weights='imagenet')
-#    base_mobile = Xception(include_top=True, input_shape=x.shape[1:],weights='imagenet')
-#    base_mobile = NASNetLarge(include_top=True, input_shape=x.shape[1:],weights='imagenet')
+#    base_model = Xception(include_top=False, input_shape=x.shape[1:],weights='imagenet')
     model = Model(inputs=base_model.input, outputs=keras.layers.GlobalAveragePooling2D()(base_model.output))
 
     alpha = 5.0

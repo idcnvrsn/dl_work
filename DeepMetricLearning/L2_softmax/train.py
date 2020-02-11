@@ -58,11 +58,6 @@ def train(x, y, classes, val_x ,val_y,epoch,batch_size):
     #学習
     hist = model.fit(x, y, batch_size=batch_size, epochs=epoch, verbose = 1, validation_data=(val_x,val_y))
 
-    #plt.figure()               
-    #plt.plot(hist.history['acc'],label="train_acc")
-    #plt.legend(loc="lower right")
-    #plt.show()
-
     return model
 
 def get_auc(Z1, Z2):

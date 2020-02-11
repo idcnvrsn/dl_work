@@ -11,6 +11,7 @@ from keras.utils import to_categorical
 import imageio
 import cv2
 import keras
+from keras.optimizers import Adam
 from keras.applications import MobileNetV2
 from keras.applications.xception import Xception
 from keras.models import Model

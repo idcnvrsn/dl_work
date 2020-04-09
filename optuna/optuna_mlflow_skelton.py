@@ -56,7 +56,7 @@ if __name__ == "__main__":
 #    parser.add_argument('filename', help='ファイル名')
 #    parser.add_argument('input_dir', help='入力ディレクトリ')
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する')
-    parser.add_argument('-tr', '--num_trials', type=int, default=20, help='最適化トライアル数')
+    parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化トライアル数')
     """
     parser.add_argument('--arg3')
@@ -84,8 +84,10 @@ if __name__ == "__main__":
             n_trials*=len(value)
     elif args.sampler is "random":
         sampler=optuna.samplers.RandomSampler()
+        n_trials=args.n_trials
     else:
         sampler=TPESampler(**TPESampler.hyperopt_parameters())
+        n_trials=args.n_trials
     
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=n_trials, timeout=args.timeout, callbacks=[mlflow_callback])

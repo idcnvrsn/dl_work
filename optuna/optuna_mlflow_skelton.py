@@ -39,10 +39,10 @@ def objective(trial):
     optimizer = trial.suggest_categorical('optimizer', args.optimizer)
 
     # Int parameter
-    num_layers = trial.suggest_int('num_layers', args.num_layers[0], args.num_layers[1])
+    num_layers = trial.suggest_categorical('num_layers', args.num_layers)
 
     # Uniform parameter
-    dropout_rate = trial.suggest_int('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
+    dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
     
     print(optimizer,num_layers)#,dropout_rate)
 
@@ -63,10 +63,10 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--arg4')
     """
     parser.add_argument('-o', '--optimizer',nargs="*", default=['MomentumSGD', 'Adam'], help='')
-    parser.add_argument('-n', '--num_layers',nargs=2, type=float, default=[1,3], help='')
-    parser.add_argument('-d', '--dropout_rate',nargs=2, type=float, default=[0.0, 1.0], help='')
-    parser.add_argument('-l', '--learning_rate',nargs=2, type=float, default=[1e-5, 1e-2], help='')
-    parser.add_argument('-dr', '--drop_path_rate',nargs=3, type=float, default=[0.0, 1.0, 0.1], help='')
+    parser.add_argument('-n', '--num_layers',nargs="*", type=int, default=[1,3], help='')
+    parser.add_argument('-d', '--dropout_rate',nargs="*", type=float, default=[0.0, 1.0], help='')
+    parser.add_argument('-l', '--learning_rate',nargs="*", type=float, default=[1e-5, 1e-2], help='')
+    parser.add_argument('-dr', '--drop_path_rate',nargs="*", type=float, default=[0.0, 1.0, 0.1], help='')
 #    parser.add_argument('-o', '--optimizer',nargs="*", type=float, default=['a','b','c'], help='')
     
     args = parser.parse_args()
@@ -88,6 +88,8 @@ if __name__ == "__main__":
     else:
         sampler=TPESampler(**TPESampler.hyperopt_parameters())
         n_trials=args.n_trials
+        
+    print("n_trials:", n_trials)
     
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=n_trials, timeout=args.timeout, callbacks=[mlflow_callback])

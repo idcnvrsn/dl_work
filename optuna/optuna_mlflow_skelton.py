@@ -43,8 +43,6 @@ def objective(trial):
 
     # Uniform parameter
     dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
-    
-    print(optimizer,num_layers)#,dropout_rate)
 
     return 1.0
 

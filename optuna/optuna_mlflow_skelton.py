@@ -9,6 +9,7 @@ from optuna.samplers import TPESampler
 import mlflow
 import argparse
 from pprint import pprint
+from datetime import datetime
 
 
 def mlflow_callback(study, trial):
@@ -56,6 +57,8 @@ if __name__ == "__main__":
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する')
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
+    parser.add_argument('-exp', '--experiment', default="Default", help='実験名')
+
     """
     parser.add_argument('--arg3')
     parser.add_argument('-a', '--arg4')
@@ -86,9 +89,14 @@ if __name__ == "__main__":
     else:
         sampler=TPESampler(**TPESampler.hyperopt_parameters())
         n_trials=args.n_trials
-        
+
     print("n_trials:", n_trials)
-    
+
+    if n_trials == 1:
+        mlflow.set_experiment(args.experiment)
+    else:
+        mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
+
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=n_trials, timeout=args.timeout, callbacks=[mlflow_callback])
 

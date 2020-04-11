@@ -45,6 +45,10 @@ def objective(trial):
     # Uniform parameter
     dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
 
+    # mlflowにロギング
+    with mlflow.start_run(run_name=study.study_name):
+        mlflow.log_params(trial.params)
+
     return 1.0
 
 
@@ -98,7 +102,7 @@ if __name__ == "__main__":
         mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
 
     study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=n_trials, timeout=args.timeout, callbacks=[mlflow_callback])
+    study.optimize(objective, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])
 
     print("Number of finished trials: {}".format(len(study.trials)))
 

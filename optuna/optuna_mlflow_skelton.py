@@ -55,7 +55,7 @@ if __name__ == "__main__":
 #    parser.add_argument('input_dir', help='入力ディレクトリ')
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する')
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数')
-    parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化トライアル数')
+    parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     """
     parser.add_argument('--arg3')
     parser.add_argument('-a', '--arg4')

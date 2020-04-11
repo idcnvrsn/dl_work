@@ -18,6 +18,11 @@ def mlflow_callback(study, trial):
         mlflow.log_params(trial.params)
         mlflow.log_metrics({"evaluation value": trial_value})
 
+def add_dict_key_prefix(_dict, prefix):
+    new_dict={}
+    for k,v in _dict.items():
+        new_dict[prefix+k]=v
+    return new_dict
 
 def objective(trial):
     '''
@@ -47,6 +52,7 @@ def objective(trial):
 
     # mlflowにロギング
     with mlflow.start_run(run_name=study.study_name):
+        mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
         mlflow.log_params(trial.params)
 
     return 1.0

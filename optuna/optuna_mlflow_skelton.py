@@ -122,7 +122,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     pprint(args.__dict__)
     
-    if args.sampler is "grid":
+    if args.sampler == "grid":
         search_space = {
         'optimizer' : args.optimizer,
         'num_layers': args.num_layers,
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         for value in search_space.values():
             n_trials*=len(value)
         obj_func_name = objective_grid
-    elif args.sampler is "random":
+    elif args.sampler == "random":
         sampler=optuna.samplers.RandomSampler()
         n_trials=args.n_trials
         obj_func_name = objective_no_grid

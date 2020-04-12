@@ -24,7 +24,7 @@ def add_dict_key_prefix(_dict, prefix):
         new_dict[prefix+k]=v
     return new_dict
 
-def objective(trial):
+def objective_no_grid(trial):
     '''
     # Categorical parameter
     optimizer = trial.suggest_categorical('optimizer', args.optimizer)
@@ -33,13 +33,47 @@ def objective(trial):
     num_layers = trial.suggest_int('num_layers', args.num_layers[0], args.num_layers[1])
 
     # Uniform parameter
-    dropout_rate = trial.suggest_uniform('dropout_rate', args.drop_rate[0], args.drop_rate[1])
+    dropout_rate = trial.suggest_uniform('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
 
     # Loguniform parameter
     learning_rate = trial.suggest_loguniform('learning_rate', args.learning_rate[-0], args.learning_rate[1])
 
     # Discrete-uniform parameter
     drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', args.drop_path_rate[0], args.drop_path_rate[1], args.drop_path_rate[2])
+    '''    
+    # Categorical parameter
+    optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+
+    # Int parameter
+    num_layers = trial.suggest_int('num_layers', args.num_layers[0], args.num_layers[1])
+
+    # Uniform parameter
+    dropout_rate = trial.suggest_uniform('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
+
+    # mlflowにロギング
+    with mlflow.start_run(run_name=study.study_name):
+        mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
+        mlflow.log_params(trial.params)
+
+    return 1.0
+
+
+def objective_grid(trial):
+    '''
+    # Categorical parameter
+    optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+
+    # Int parameter
+    num_layers = trial.suggest_categorical('num_layers', args.num_layers)
+
+    # Uniform parameter
+    dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
+
+    # Loguniform parameter
+    learning_rate = trial.suggest_categorical('learning_rate', args.learning_rate)
+
+    # Discrete-uniform parameter
+    drop_path_rate = trial.suggest_categorical('drop_path_rate', args.drop_path_rate)
     '''    
     # Categorical parameter
     optimizer = trial.suggest_categorical('optimizer', args.optimizer)
@@ -93,12 +127,15 @@ if __name__ == "__main__":
         n_trials=1
         for value in search_space.values():
             n_trials*=len(value)
+        obj_func_name = objective_grid
     elif args.sampler is "random":
         sampler=optuna.samplers.RandomSampler()
         n_trials=args.n_trials
+        obj_func_name = objective_no_grid
     else:
         sampler=TPESampler(**TPESampler.hyperopt_parameters())
         n_trials=args.n_trials
+        obj_func_name = objective_no_grid
 
     print("n_trials:", n_trials)
 
@@ -108,7 +145,7 @@ if __name__ == "__main__":
         mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
 
     study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])
+    study.optimize(obj_func_name, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])
 
     print("Number of finished trials: {}".format(len(study.trials)))
 

@@ -96,23 +96,28 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='このプログラムの説明', fromfile_prefix_chars='@')
     
-#    parser.add_argument('filename', help='ファイル名')
-#    parser.add_argument('input_dir', help='入力ディレクトリ')
+    # optunaとmlflowに設定するオプション
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する')
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名')
 
-    """
-    parser.add_argument('--arg3')
-    parser.add_argument('-a', '--arg4')
-    """
+    # optunaの探索空間を設定する　gridの場合ここで設定した組みわせ全てを探索する。
     parser.add_argument('-o', '--optimizer',nargs="*", default=['MomentumSGD', 'Adam'], help='')
     parser.add_argument('-n', '--num_layers',nargs="*", type=int, default=[1,3], help='')
     parser.add_argument('-d', '--dropout_rate',nargs="*", type=float, default=[0.0, 1.0], help='')
     parser.add_argument('-l', '--learning_rate',nargs="*", type=float, default=[1e-5, 1e-2], help='')
     parser.add_argument('-dr', '--drop_path_rate',nargs="*", type=float, default=[0.0, 1.0, 0.1], help='')
 #    parser.add_argument('-o', '--optimizer',nargs="*", type=float, default=['a','b','c'], help='')
+
+    # その他ユーザーが設定するオプション
+#    parser.add_argument('filename', help='ファイル名')
+#    parser.add_argument('input_dir', help='入力ディレクトリ')
+
+    """
+    parser.add_argument('--arg3')
+    parser.add_argument('-a', '--arg4')
+    """
     
     args = parser.parse_args()
     pprint(args.__dict__)

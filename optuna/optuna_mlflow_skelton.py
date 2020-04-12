@@ -130,6 +130,7 @@ if __name__ == "__main__":
     pprint(args.__dict__)
     
     if args.sampler == "grid":
+        # グリッドサーチする対象を対象をここで設定する
         search_space = {
         'optimizer' : args.optimizer,
         'num_layers': args.num_layers,

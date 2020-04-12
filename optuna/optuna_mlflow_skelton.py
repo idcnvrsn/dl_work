@@ -65,6 +65,8 @@ def objective_no_grid(trial):
 # 固定パラメータおよびグリッドサーチを行うための目的関数
 def objective_grid(trial):
     '''
+    パラメータは原則trial,suggest_categorical()で指定する。 
+    
     # Categorical parameter
     optimizer = trial.suggest_categorical('optimizer', args.optimizer)
 

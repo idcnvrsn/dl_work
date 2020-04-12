@@ -2,7 +2,7 @@
 """
 このスケルトンをベースに訓練スクリプトを作成するとoptunaとmlflowの機能を利用できる.
 パラメータの指定は下記4種類
-・シングルパラメータで学習
+・シングルパラメータ
 ・grid search
 ・random search
 ・tpe search

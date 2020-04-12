@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  8 00:38:12 2020
-
+このスケルトンをベースに訓練スクリプトを作成するとoptunaとmlflowの機能を利用できる.
+パラメータの指定は下記4種類
+・シングルパラメータで学習
+・grid search
+・random search
+・tpe search
 """
 
 import optuna

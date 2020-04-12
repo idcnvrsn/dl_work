@@ -105,8 +105,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='このプログラムの説明', fromfile_prefix_chars='@')
     
     # optunaとmlflowに設定するオプション
-    parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する')
-    parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数')
+    parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する(シングルパラメータで学習する場合はgridを指定する)')
+    parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名')
 

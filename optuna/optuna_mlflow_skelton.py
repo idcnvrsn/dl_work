@@ -87,6 +87,7 @@ def objective_grid(trial):
     # mlflowにロギング
     with mlflow.start_run(run_name=study.study_name):
         mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
+        mlflow.log_param("n_trials", n_trials)
         mlflow.log_params(trial.params)
 
     return 1.0

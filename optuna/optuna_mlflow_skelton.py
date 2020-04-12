@@ -9,7 +9,7 @@
 """
 
 import optuna
-from optuna.samplers import TPESampler
+from optuna.samplers import GridSampler, RandomSampler, TPESampler
 import mlflow
 import argparse
 from pprint import pprint
@@ -135,13 +135,13 @@ if __name__ == "__main__":
         'num_layers': args.num_layers,
         'dropout_rate': args.dropout_rate
         }
-        sampler=optuna.samplers.GridSampler(search_space)
+        sampler=GridSampler(search_space)
         n_trials=1
         for value in search_space.values():
             n_trials*=len(value)
         obj_func_name = objective_grid
     elif args.sampler == "random":
-        sampler=optuna.samplers.RandomSampler()
+        sampler=RandomSampler()
         n_trials=args.n_trials
         obj_func_name = objective_no_grid
     else:

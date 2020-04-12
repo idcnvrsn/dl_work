@@ -24,6 +24,7 @@ def add_dict_key_prefix(_dict, prefix):
         new_dict[prefix+k]=v
     return new_dict
 
+# ランダムおよびTPEサーチを行うための目的関数
 def objective_no_grid(trial):
     '''
     # Categorical parameter
@@ -57,7 +58,7 @@ def objective_no_grid(trial):
 
     return 1.0
 
-
+# 固定パラメータおよびグリッドサーチを行うための目的関数
 def objective_grid(trial):
     '''
     # Categorical parameter
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名')
 
-    # optunaの探索空間を設定する　gridの場合ここで設定した組みわせ全てを探索する。
+    # optunaの探索空間を設定する　gridサーチの場合ここで設定した組みわせ全てを探索する。
     parser.add_argument('-o', '--optimizer',nargs="*", default=['MomentumSGD', 'Adam'], help='')
     parser.add_argument('-n', '--num_layers',nargs="*", type=int, default=[1,3], help='')
     parser.add_argument('-d', '--dropout_rate',nargs="*", type=float, default=[0.0, 1.0], help='')
@@ -114,7 +115,6 @@ if __name__ == "__main__":
     # その他ユーザーが設定するオプション
 #    parser.add_argument('filename', help='ファイル名')
 #    parser.add_argument('input_dir', help='入力ディレクトリ')
-
     """
     parser.add_argument('--arg3')
     parser.add_argument('-a', '--arg4')

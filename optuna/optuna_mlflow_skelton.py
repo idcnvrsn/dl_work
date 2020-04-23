@@ -15,6 +15,16 @@ import argparse
 from pprint import pprint
 from datetime import datetime
 
+# 再現性を上げるためrandomを使用している場合はrandom.seed()でseedを設定する
+#import random
+#random.seed(1)
+
+# pytorchで再現性を上げるための設定
+#import torch
+#torch.manual_seed(1)
+#torch.backends.cudnn.deterministic = True
+#torch.backends.cudnn.benchmark = False
+
 
 def mlflow_callback(study, trial):
     trial_value = trial.value if trial.value is not None else float("nan")

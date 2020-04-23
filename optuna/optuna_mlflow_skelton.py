@@ -91,6 +91,7 @@ def objective_grid(trial):
     # Uniform parameter
     dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
 
+    # ここに訓練処理を追記する
     # mlflowにロギング
     with mlflow.start_run(run_name=study.study_name):
         mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
@@ -108,8 +109,9 @@ if __name__ == "__main__":
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する(シングルパラメータで学習する場合はgridを指定する)')
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
-    parser.add_argument('-exp', '--experiment', default="Default", help='実験名')
+    parser.add_argument('-exp', '--experiment', default="Default", help='実験名。1通りのパラメータセットで学習する際には設定した実験名となる。複数のパラメータセットを探索する際には日時を付与して個別の実験名とする。')
 
+    # ここでチューニングしたいパラメータを設定する
     # optunaの探索空間を設定する　gridサーチの場合ここで設定した組みわせ全てを探索する。
     parser.add_argument('-o', '--optimizer',nargs="*", default=['MomentumSGD', 'Adam'], help='')
     parser.add_argument('-n', '--num_layers',nargs="*", type=int, default=[1,3], help='')
@@ -128,8 +130,9 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     pprint(args.__dict__)
-    
+
     if args.sampler == "grid":
+        # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する
         # グリッドサーチする対象を対象をここで設定する
         search_space = {
         'optimizer' : args.optimizer,

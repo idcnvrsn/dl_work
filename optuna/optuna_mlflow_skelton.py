@@ -19,6 +19,10 @@ from datetime import datetime
 #import random
 #random.seed(1)
 
+# numpyで再現性を上げるためのの設定
+#import numpy as np
+#np.random.seed(1)
+
 # pytorchで再現性を上げるための設定
 #import torch
 #torch.manual_seed(1)

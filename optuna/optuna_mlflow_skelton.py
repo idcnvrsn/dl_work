@@ -14,20 +14,9 @@ import mlflow
 import argparse
 from pprint import pprint
 from datetime import datetime
-
-# 再現性を上げるためrandomを使用している場合はrandom.seed()でseedを設定する
-#import random
-#random.seed(1)
-
-# numpyで再現性を上げるためのの設定
-#import numpy as np
-#np.random.seed(1)
-
-# pytorchで再現性を上げるための設定
-#import torch
-#torch.manual_seed(1)
-#torch.backends.cudnn.deterministic = True
-#torch.backends.cudnn.benchmark = False
+import random
+import numpy as np
+import torch
 
 
 def mlflow_callback(study, trial):
@@ -124,6 +113,7 @@ if __name__ == "__main__":
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名。1通りのパラメータセットで学習する際には設定した実験名となる。複数のパラメータセットを探索する際には日時を付与して個別の実験名とする。')
+    parser.add_argument('--seed', type=int,default=4321, help='random seed')
 
     # ここでチューニングしたいパラメータを設定する
     # optunaの探索空間を設定する　gridサーチの場合ここで設定した組みわせ全てを探索する。
@@ -144,6 +134,17 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     pprint(args.__dict__)
+
+    # 再現性を上げるためrandomを使用している場合はrandom.seed()でseedを設定する
+    #random.seed(args.seed)
+    
+    # numpyで再現性を上げるためのの設定
+    #np.random.seed(args.seed)
+    
+    # pytorchで再現性を上げるための設定
+    #torch.manual_seed(args.seed)
+    #torch.backends.cudnn.deterministic = True
+    #torch.backends.cudnn.benchmark = False
 
     if args.sampler == "grid":
         # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する

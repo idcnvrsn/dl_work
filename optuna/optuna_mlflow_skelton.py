@@ -106,7 +106,7 @@ def objective_grid(trial):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='このプログラムの説明', fromfile_prefix_chars='@')
+    parser = argparse.ArgumentParser(description='このプログラムの説明', formatter_class=argparse.ArgumentDefaultsHelpFormatter, fromfile_prefix_chars='@')
     
     # optunaとmlflowに設定するオプション
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する(シングルパラメータで学習する場合はgridを指定する)')

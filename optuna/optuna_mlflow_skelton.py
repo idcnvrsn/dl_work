@@ -17,7 +17,7 @@ from datetime import datetime
 import random
 import numpy as np
 import torch
-
+import copy
 
 def mlflow_callback(study, trial):
     trial_value = trial.value if trial.value is not None else float("nan")
@@ -25,10 +25,16 @@ def mlflow_callback(study, trial):
         mlflow.log_params(trial.params)
         mlflow.log_metrics({"evaluation value": trial_value})
 
-def add_dict_key_prefix(_dict, prefix):
+def add_dict_key_prefix(prefix, _dict):
     new_dict={}
     for k,v in _dict.items():
         new_dict[prefix+k]=v
+    return new_dict
+
+def add_dict_key_postfix(_dict, postfix):
+    new_dict={}
+    for k,v in _dict.items():
+        new_dict[k+postfix]=v
     return new_dict
 
 # ランダムおよびTPEサーチを行うための目的関数
@@ -58,10 +64,20 @@ def objective_no_grid(trial):
     # Uniform parameter
     dropout_rate = trial.suggest_uniform('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
 
+    """
+    # このイテレーションで使うパラメータの組み合わせを構築する
+    _args = copy.deepcopy(args)
+    _args.lr=_lr
+    _args.batch_size=_batch_size
+    _args.loss_type=_loss_type
+    """
+
+    # ここに訓練処理を追記する
+
     # mlflowにロギング
     with mlflow.start_run(run_name=study.study_name):
-        mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
-        mlflow.log_params(trial.params)
+        mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
+        mlflow.log_params(add_dict_key_postfix(trial.params, "_(trial_params)"))
 
     return 1.0
 
@@ -94,12 +110,21 @@ def objective_grid(trial):
     # Uniform parameter
     dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
 
+    """
+    # このイテレーションで使うパラメータの組み合わせを構築する
+    _args = copy.deepcopy(args)
+    _args.lr=_lr
+    _args.batch_size=_batch_size
+    _args.loss_type=_loss_type
+    """
+    
     # ここに訓練処理を追記する
+
     # mlflowにロギング
     with mlflow.start_run(run_name=study.study_name):
-        mlflow.log_params(add_dict_key_prefix(args.__dict__, "args_"))
+        mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
         mlflow.log_param("n_trials", n_trials)
-        mlflow.log_params(trial.params)
+        mlflow.log_params(add_dict_key_postfix(trial.params, "__trial_params"))
 
     return 1.0
 

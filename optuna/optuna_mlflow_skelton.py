@@ -75,7 +75,7 @@ def objective_no_grid(trial):
     # ここに訓練処理を追記する
 
     # mlflowにロギング
-    with mlflow.start_run(run_name=study.study_name):
+    with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
         mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
         mlflow.log_params(add_dict_key_postfix(trial.params, "_(trial_params)"))
 
@@ -121,7 +121,7 @@ def objective_grid(trial):
     # ここに訓練処理を追記する
 
     # mlflowにロギング
-    with mlflow.start_run(run_name=study.study_name):
+    with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
         mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
         mlflow.log_param("n_trials", n_trials)
         mlflow.log_params(add_dict_key_postfix(trial.params, "__trial_params"))

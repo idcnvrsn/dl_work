@@ -196,9 +196,15 @@ if __name__ == "__main__":
     print("n_trials:", n_trials)
 
     if n_trials == 1:
-        mlflow.set_experiment(args.experiment)
+        try:
+            mlflow.set_experiment(args.experiment)
+        except Exception as e:
+            print(e)
     else:
-        mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
+        try:
+            mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
+        except Exception as e:
+            print(e)
 
     study = optuna.create_study(sampler=sampler)
     study.optimize(obj_func_name, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])

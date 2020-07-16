@@ -148,14 +148,6 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--learning_rate',nargs="*", type=float, default=[1e-5, 1e-2], help='')
     parser.add_argument('-dr', '--drop_path_rate',nargs="*", type=float, default=[0.0, 1.0, 0.1], help='')
 #    parser.add_argument('-o', '--optimizer',nargs="*", type=float, default=['a','b','c'], help='')
-
-    # その他ユーザーが設定するオプション
-#    parser.add_argument('filename', help='ファイル名')
-#    parser.add_argument('input_dir', help='入力ディレクトリ')
-    """
-    parser.add_argument('--arg3')
-    parser.add_argument('-a', '--arg4')
-    """
     
     args = parser.parse_args()
     pprint(args.__dict__)

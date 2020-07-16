@@ -78,7 +78,7 @@ def objective_no_grid(trial):
     try:
         with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
             mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
-            mlflow.log_params(add_dict_key_postfix(trial.params, "_(trial_params)"))
+            mlflow.log_params(add_dict_key_postfix(trial.params, "_trial_params"))
     except Exception as e:
         print(e)
 
@@ -128,7 +128,7 @@ def objective_grid(trial):
         with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
             mlflow.log_params(add_dict_key_prefix("args_", args.__dict__, ))
             mlflow.log_param("n_trials", n_trials)
-            mlflow.log_params(add_dict_key_postfix(trial.params, "_(trial_params)"))
+            mlflow.log_params(add_dict_key_postfix(trial.params, "_trial_params"))
     except Exception as e:
         print(e)
 

@@ -72,7 +72,7 @@ def objective_no_grid(trial):
     _args.loss_type=_loss_type
     """
 
-    # ここに訓練処理を追記する
+    # ここに調整したい処理を追記する
 
     # mlflowにロギング
     try:
@@ -121,7 +121,7 @@ def objective_grid(trial):
     _args.loss_type=_loss_type
     """
     
-    # ここに訓練処理を追記する
+    # ここに調整したい処理を追記する
 
     # mlflowにロギング
     try:

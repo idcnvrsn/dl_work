@@ -118,7 +118,7 @@ class OptunaMlFlow:
         """
 
         # ここで一つのパラメータの組み合わせについて評価する
-        #result=trial_process(optimizer, num_layers, dropout_rate)
+        #result=self.trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)
@@ -163,7 +163,7 @@ class OptunaMlFlow:
         """
         
         # ここで一つのパラメータの組み合わせについて評価する
-        #result=trial_process(optimizer, num_layers, dropout_rate)
+        #result=self.trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)

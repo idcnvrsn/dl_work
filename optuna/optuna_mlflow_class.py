@@ -117,8 +117,8 @@ class OptunaMlFlow:
         _args.loss_type=_loss_type
         """
 
-        # ここに訓練処理を追記する
-
+        # ここで一つのパラメータの組み合わせについて評価する
+        #result=trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)
@@ -162,8 +162,8 @@ class OptunaMlFlow:
         _args.loss_type=_loss_type
         """
         
-        # ここに訓練処理を追記する
-
+        # ここで一つのパラメータの組み合わせについて評価する
+        #result=trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)

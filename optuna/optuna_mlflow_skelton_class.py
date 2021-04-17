@@ -77,6 +77,16 @@ class OptunaMlFlow:
             new_dict[k+postfix]=v
         return new_dict
 
+    # mlflowにロギング
+    def log_mlflow(self, trial):
+        try:
+            with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
+                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
+                mlflow.log_param("n_trials", self.n_trials)
+                mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
+        except Exception as e:
+            print(e)
+
     # ランダムおよびTPEサーチを行うための目的関数
     def objective_no_grid(self, trial):
         '''
@@ -114,13 +124,9 @@ class OptunaMlFlow:
 
         # ここに訓練処理を追記する
 
+
         # mlflowにロギング
-        try:
-            with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
-                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
-                mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
-        except Exception as e:
-            print(e)
+        self.log_mlflow(trial)
 
         return 1.0
 
@@ -163,14 +169,9 @@ class OptunaMlFlow:
         
         # ここに訓練処理を追記する
 
+
         # mlflowにロギング
-        try:
-            with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
-                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
-                mlflow.log_param("n_trials", self.n_trials)
-                mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
-        except Exception as e:
-            print(e)
+        self.log_mlflow(trial)
 
         return 1.0
 

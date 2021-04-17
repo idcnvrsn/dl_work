@@ -20,9 +20,9 @@ import numpy as np
 import copy
 
 class OptunaMlFlow:
-    def __init__(self, argumen):
+    def __init__(self, argument):
         self.name = ''
-        self.argument=argumen
+        self.argument=argument
 
         if self.argument.sampler == "grid":
             # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する

@@ -177,17 +177,20 @@ class OptunaMlFlow:
     def optimize(self):
         self.study.optimize(self.obj_func_name, n_trials=self.n_trials, timeout=self.argument.timeout)#, callbacks=[self.mlflow_callback])
 
-    def print_results(self):
-        print("Number of finished trials: {}".format(len(self.study.trials)))
+    def get_result_text(self):
+        text=str()
+        text+="Number of finished trials: {}".format(len(self.study.trials))+"\n"
 
-        print("Best trial:")
+        text+="Best trial:"+"\n"
         trial = self.study.best_trial
 
-        print("  Value: {}".format(trial.value))
+        text+="  Value: {}".format(trial.value)+"\n"
 
-        print("  Params: ")
+        text+="  Params: "+"\n"
         for key, value in trial.params.items():
-            print("    {}: {}".format(key, value))
+            text+="    {}: {}".format(key, value)+"\n"
+
+        return text
 
 def main():
     parser = argparse.ArgumentParser(description='optunaとmlflowを利用した学習スクリプト', formatter_class=argparse.ArgumentDefaultsHelpFormatter, fromfile_prefix_chars='@')
@@ -227,7 +230,7 @@ def main():
 
     print("n_trials:", optuna_mlflow.n_trials)
 
-    optuna_mlflow.print_results()
+    print(optuna_mlflow.get_result_text())
 
 if __name__ == '__main__':
     main()

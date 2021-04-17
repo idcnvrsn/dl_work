@@ -20,8 +20,44 @@ import numpy as np
 import copy
 
 class OptunaMlFlow:
-    def __init__(self):
+    def __init__(self, argumen):
         self.name = ''
+        self.argument=argumen
+
+        if self.argument.sampler == "grid":
+            # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する
+            # グリッドサーチする対象を対象をここに記載する
+            search_space = {
+                'optimizer' : self.argument.optimizer,
+                'num_layers': self.argument.num_layers,
+                'dropout_rate': self.argument.dropout_rate
+            }
+            self.sampler=GridSampler(search_space)
+            self.n_trials=1
+            for value in search_space.values():
+                self.n_trials*=len(value)
+            self.obj_func_name = self.objective_grid
+        elif self.argument.sampler == "random":
+            self.sampler=RandomSampler()
+            self.n_trials=self.argument.n_trials
+            self.obj_func_name = self.objective_no_grid
+        else:
+            self.sampler=TPESampler(**TPESampler.hyperopt_parameters())
+            self.n_trials=self.argument.n_trials
+            self.obj_func_name = self.objective_no_grid
+
+        if self.n_trials == 1:
+            try:
+                mlflow.set_experiment(self.argument.experiment)
+            except Exception as e:
+                print(e)
+        else:
+            try:
+                mlflow.set_experiment(self.argument.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
+            except Exception as e:
+                print(e)
+
+        self.study = optuna.create_study(sampler=self.sampler)
 
     def mlflow_callback(self, study, trial):
         trial_value = trial.value if trial.value is not None else float("nan")
@@ -60,13 +96,13 @@ class OptunaMlFlow:
         drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', args.drop_path_rate[0], args.drop_path_rate[1], args.drop_path_rate[2])
         '''    
         # Categorical parameter
-        optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+        optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
         # Int parameter
-        num_layers = trial.suggest_int('num_layers', args.num_layers[0], args.num_layers[1])
+        num_layers = trial.suggest_int('num_layers', self.argument.num_layers[0], self.argument.num_layers[1])
 
         # Uniform parameter
-        dropout_rate = trial.suggest_uniform('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
+        dropout_rate = trial.suggest_uniform('dropout_rate', self.argument.dropout_rate[0], self.argument.dropout_rate[1])
 
         """
         # このイテレーションで使うパラメータの組み合わせを構築する
@@ -81,7 +117,7 @@ class OptunaMlFlow:
         # mlflowにロギング
         try:
             with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
-                mlflow.log_params(self.add_dict_key_prefix("args_", args.__dict__, ))
+                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
                 mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
         except Exception as e:
             print(e)
@@ -109,13 +145,13 @@ class OptunaMlFlow:
         drop_path_rate = trial.suggest_categorical('drop_path_rate', args.drop_path_rate)
         '''    
         # Categorical parameter
-        optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+        optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
         # Int parameter
-        num_layers = trial.suggest_categorical('num_layers', args.num_layers)
+        num_layers = trial.suggest_categorical('num_layers', self.argument.num_layers)
 
         # Uniform parameter
-        dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
+        dropout_rate = trial.suggest_categorical('dropout_rate', self.argument.dropout_rate)
 
         """
         # このイテレーションで使うパラメータの組み合わせを構築する
@@ -130,18 +166,31 @@ class OptunaMlFlow:
         # mlflowにロギング
         try:
             with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
-                mlflow.log_params(self.add_dict_key_prefix("args_", args.__dict__, ))
-                mlflow.log_param("n_trials", n_trials)
+                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
+                mlflow.log_param("n_trials", self.n_trials)
                 mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
         except Exception as e:
             print(e)
 
         return 1.0
 
+    def optimize(self):
+        self.study.optimize(self.obj_func_name, n_trials=self.n_trials, timeout=self.argument.timeout)#, callbacks=[self.mlflow_callback])
 
-if __name__ == "__main__":
+    def print_results(self):
+        print("Number of finished trials: {}".format(len(self.study.trials)))
 
-    parser = argparse.ArgumentParser(description='このプログラムの説明', formatter_class=argparse.ArgumentDefaultsHelpFormatter, fromfile_prefix_chars='@')
+        print("Best trial:")
+        trial = self.study.best_trial
+
+        print("  Value: {}".format(trial.value))
+
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+
+def main():
+    parser = argparse.ArgumentParser(description='optunaとmlflowを利用した学習スクリプト', formatter_class=argparse.ArgumentDefaultsHelpFormatter, fromfile_prefix_chars='@')
     
     # optunaとmlflowに設定するオプション
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する(シングルパラメータで学習する場合はgridを指定する)')
@@ -173,8 +222,10 @@ if __name__ == "__main__":
     #torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.benchmark = False
 
-    optuna_mlflow=OptunaMlFlow()
+    optuna_mlflow=OptunaMlFlow(args)
+    optuna_mlflow.optimize()
 
+    """
     if args.sampler == "grid":
         # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する
         # グリッドサーチする対象を対象をここで設定する
@@ -196,9 +247,11 @@ if __name__ == "__main__":
         sampler=TPESampler(**TPESampler.hyperopt_parameters())
         n_trials=args.n_trials
         obj_func_name = optuna_mlflow.objective_no_grid
+    """
 
-    print("n_trials:", n_trials)
+    print("n_trials:", optuna_mlflow.n_trials)
 
+    """
     if n_trials == 1:
         try:
             mlflow.set_experiment(args.experiment)
@@ -209,10 +262,14 @@ if __name__ == "__main__":
             mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
         except Exception as e:
             print(e)
+    """
 
+    """
     study = optuna.create_study(sampler=sampler)
     study.optimize(obj_func_name, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])
-
+    """
+    optuna_mlflow.print_results()
+    """
     print("Number of finished trials: {}".format(len(study.trials)))
 
     print("Best trial:")
@@ -223,3 +280,7 @@ if __name__ == "__main__":
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
+    """
+
+if __name__ == '__main__':
+    main()

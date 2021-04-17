@@ -225,62 +225,9 @@ def main():
     optuna_mlflow=OptunaMlFlow(args)
     optuna_mlflow.optimize()
 
-    """
-    if args.sampler == "grid":
-        # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する
-        # グリッドサーチする対象を対象をここで設定する
-        search_space = {
-        'optimizer' : args.optimizer,
-        'num_layers': args.num_layers,
-        'dropout_rate': args.dropout_rate
-        }
-        sampler=GridSampler(search_space)
-        n_trials=1
-        for value in search_space.values():
-            n_trials*=len(value)
-        obj_func_name = optuna_mlflow.objective_grid
-    elif args.sampler == "random":
-        sampler=RandomSampler()
-        n_trials=args.n_trials
-        obj_func_name = optuna_mlflow.objective_no_grid
-    else:
-        sampler=TPESampler(**TPESampler.hyperopt_parameters())
-        n_trials=args.n_trials
-        obj_func_name = optuna_mlflow.objective_no_grid
-    """
-
     print("n_trials:", optuna_mlflow.n_trials)
 
-    """
-    if n_trials == 1:
-        try:
-            mlflow.set_experiment(args.experiment)
-        except Exception as e:
-            print(e)
-    else:
-        try:
-            mlflow.set_experiment(args.experiment+"_"+datetime.now().strftime('%Y%m%d_%H:%M:%S'))
-        except Exception as e:
-            print(e)
-    """
-
-    """
-    study = optuna.create_study(sampler=sampler)
-    study.optimize(obj_func_name, n_trials=n_trials, timeout=args.timeout)#, callbacks=[mlflow_callback])
-    """
     optuna_mlflow.print_results()
-    """
-    print("Number of finished trials: {}".format(len(study.trials)))
-
-    print("Best trial:")
-    trial = study.best_trial
-
-    print("  Value: {}".format(trial.value))
-
-    print("  Params: ")
-    for key, value in trial.params.items():
-        print("    {}: {}".format(key, value))
-    """
 
 if __name__ == '__main__':
     main()

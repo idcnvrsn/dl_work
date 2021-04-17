@@ -81,19 +81,19 @@ class OptunaMlFlow:
     def objective_no_grid(self, trial):
         '''
         # Categorical parameter
-        optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+        optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
         # Int parameter
-        num_layers = trial.suggest_int('num_layers', args.num_layers[0], args.num_layers[1])
+        num_layers = trial.suggest_int('num_layers', self.argument.num_layers[0], self.argument.num_layers[1])
 
         # Uniform parameter
-        dropout_rate = trial.suggest_uniform('dropout_rate', args.dropout_rate[0], args.dropout_rate[1])
+        dropout_rate = trial.suggest_uniform('dropout_rate', self.argument.dropout_rate[0], self.argument.dropout_rate[1])
 
         # Loguniform parameter
-        learning_rate = trial.suggest_loguniform('learning_rate', args.learning_rate[-0], args.learning_rate[1])
+        learning_rate = trial.suggest_loguniform('learning_rate', self.argument.learning_rate[-0], self.argument.learning_rate[1])
 
         # Discrete-uniform parameter
-        drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', args.drop_path_rate[0], args.drop_path_rate[1], args.drop_path_rate[2])
+        drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', self.argument.drop_path_rate[0], self.argument.drop_path_rate[1], self.argument.drop_path_rate[2])
         '''    
         # Categorical parameter
         optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
@@ -106,7 +106,7 @@ class OptunaMlFlow:
 
         """
         # このイテレーションで使うパラメータの組み合わせを構築する
-        _args = copy.deepcopy(args)
+        _args = copy.deepcopy(self.argument)
         _args.lr=_lr
         _args.batch_size=_batch_size
         _args.loss_type=_loss_type
@@ -130,19 +130,19 @@ class OptunaMlFlow:
         パラメータは原則trial,suggest_categorical()で指定する。 
         
         # Categorical parameter
-        optimizer = trial.suggest_categorical('optimizer', args.optimizer)
+        optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
         # Int parameter
-        num_layers = trial.suggest_categorical('num_layers', args.num_layers)
+        num_layers = trial.suggest_categorical('num_layers', self.argument.num_layers)
 
         # Uniform parameter
-        dropout_rate = trial.suggest_categorical('dropout_rate', args.dropout_rate)
+        dropout_rate = trial.suggest_categorical('dropout_rate', self.argument.dropout_rate)
 
         # Loguniform parameter
-        learning_rate = trial.suggest_categorical('learning_rate', args.learning_rate)
+        learning_rate = trial.suggest_categorical('learning_rate', self.argument.learning_rate)
 
         # Discrete-uniform parameter
-        drop_path_rate = trial.suggest_categorical('drop_path_rate', args.drop_path_rate)
+        drop_path_rate = trial.suggest_categorical('drop_path_rate', self.argument.drop_path_rate)
         '''    
         # Categorical parameter
         optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)

@@ -16,25 +16,20 @@ from pprint import pprint
 from datetime import datetime
 import random
 import numpy as np
-#import torch
 import copy
 
 class OptunaMlFlow:
-    def __init__(self, argument):
+    def __init__(self, argument, grid_search_space=None):
         self.name = ''
         self.argument=argument
+        self.search_space=grid_search_space
 
         if self.argument.sampler == "grid":
-            # グリッドサーチする場合はここでもチューニングしたいパラメータを設定する
-            # グリッドサーチする対象を対象をここに記載する
-            search_space = {
-                'optimizer' : self.argument.optimizer,
-                'num_layers': self.argument.num_layers,
-                'dropout_rate': self.argument.dropout_rate
-            }
-            self.sampler=GridSampler(search_space)
+            assert self.search_space is not None, "grid search spaceを指定してください"
+
+            self.sampler=GridSampler(self.search_space)
             self.n_trials=1
-            for value in search_space.values():
+            for value in self.search_space.values():
                 self.n_trials*=len(value)
             self.obj_func_name = self.objective_grid
         elif self.argument.sampler == "random":
@@ -215,18 +210,14 @@ def main():
     args = parser.parse_args()
     pprint(args.__dict__)
 
-    # 再現性を上げるためrandomを使用している場合はrandom.seed()でseedを設定する
-    #random.seed(args.seed)
-    
-    # numpyで再現性を上げるためのの設定
-    #np.random.seed(args.seed)
-    
-    # pytorchで再現性を上げるための設定
-    #torch.manual_seed(args.seed)
-    #torch.backends.cudnn.deterministic = True
-    #torch.backends.cudnn.benchmark = False
+    # グリッドサーチする場合はここでチューニングしたいパラメータ空間を定義してコンストラクタに渡す
+    search_space = {
+        'optimizer' : args.optimizer,
+        'num_layers': args.num_layers,
+        'dropout_rate': args.dropout_rate
+    }
 
-    optuna_mlflow=OptunaMlFlow(args)
+    optuna_mlflow=OptunaMlFlow(args, search_space)
     optuna_mlflow.optimize()
 
     print("n_trials:", optuna_mlflow.n_trials)

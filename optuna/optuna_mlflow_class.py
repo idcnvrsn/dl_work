@@ -82,6 +82,12 @@ class OptunaMlFlow:
         except Exception as e:
             print(e)
 
+    """
+    # ここで一つのパラメータの組み合わせについて評価する
+    def trial_process(self, x, y):
+        return x**2+y**2+1 
+    """
+
     # ランダムおよびTPEサーチを行うための目的関数
     def objective_no_grid(self, trial):
         '''

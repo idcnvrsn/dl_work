@@ -33,11 +33,11 @@ class OptunaMlFlow:
                 self.n_trials*=len(value)
             self.obj_func_name = self.objective_grid
         elif self.argument.sampler == "random":
-            self.sampler=RandomSampler()
+            self.sampler=RandomSampler(seed=self.argument.seed)
             self.n_trials=self.argument.n_trials
             self.obj_func_name = self.objective_no_grid
         else:
-            self.sampler=TPESampler(**TPESampler.hyperopt_parameters())
+            self.sampler=TPESampler(**TPESampler.hyperopt_parameters(), seed=self.argument.seed)
             self.n_trials=self.argument.n_trials
             self.obj_func_name = self.objective_no_grid
 
@@ -82,11 +82,9 @@ class OptunaMlFlow:
         except Exception as e:
             print(e)
 
-    """
-    # ここで一つのパラメータの組み合わせについて評価する
-    def trial_process(self, x, y):
-        return x**2+y**2+1 
-    """
+    # ここの最適化したい処理を記述する
+    #def trial_process(self, optimizer, num_layers, dropout_rate):
+    #    return 1.0
 
     # ランダムおよびTPEサーチを行うための目的関数
     def objective_no_grid(self, trial):
@@ -124,7 +122,7 @@ class OptunaMlFlow:
         """
 
         # ここで一つのパラメータの組み合わせについて評価する
-        #result=self.trial_process(optimizer, num_layers, dropout_rate)
+        result=self.trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)
@@ -169,7 +167,7 @@ class OptunaMlFlow:
         """
         
         # ここで一つのパラメータの組み合わせについて評価する
-        #result=self.trial_process(optimizer, num_layers, dropout_rate)
+        result=self.trial_process(optimizer, num_layers, dropout_rate)
 
         # mlflowにロギング
         self.log_mlflow(trial)

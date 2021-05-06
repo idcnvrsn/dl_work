@@ -99,7 +99,7 @@ class OptunaMlFlow:
         dropout_rate = trial.suggest_uniform('dropout_rate', self.argument.dropout_rate[0], self.argument.dropout_rate[1])
 
         # Loguniform parameter
-        learning_rate = trial.suggest_loguniform('learning_rate', self.argument.learning_rate[-0], self.argument.learning_rate[1])
+        learning_rate = trial.suggest_loguniform('learning_rate', self.argument.learning_rate[0], self.argument.learning_rate[1])
 
         # Discrete-uniform parameter
         drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', self.argument.drop_path_rate[0], self.argument.drop_path_rate[1], self.argument.drop_path_rate[2])
@@ -134,19 +134,14 @@ class OptunaMlFlow:
         '''
         パラメータは原則trial,suggest_categorical()で指定する。 
         
-        # Categorical parameter
         optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
-        # Int parameter
         num_layers = trial.suggest_categorical('num_layers', self.argument.num_layers)
 
-        # Uniform parameter
         dropout_rate = trial.suggest_categorical('dropout_rate', self.argument.dropout_rate)
 
-        # Loguniform parameter
         learning_rate = trial.suggest_categorical('learning_rate', self.argument.learning_rate)
 
-        # Discrete-uniform parameter
         drop_path_rate = trial.suggest_categorical('drop_path_rate', self.argument.drop_path_rate)
         '''    
         # Categorical parameter

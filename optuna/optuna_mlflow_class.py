@@ -22,14 +22,14 @@ class OptunaMlFlow:
     def __init__(self, argument, grid_search_space=None):
         self.name = ''
         self.argument=argument
-        self.search_space=grid_search_space
+        self.grid_search_space=grid_search_space
 
         if self.argument.sampler == "grid":
-            assert self.search_space is not None, "grid search spaceを指定してください"
+            assert self.grid_search_space is not None, "grid search spaceを指定してください"
 
-            self.sampler=GridSampler(self.search_space)
+            self.sampler=GridSampler(self.grid_search_space)
             self.n_trials=1
-            for value in self.search_space.values():
+            for value in self.grid_search_space.values():
                 self.n_trials*=len(value)
             self.obj_func_name = self.objective_grid
         elif self.argument.sampler == "random":
@@ -83,8 +83,8 @@ class OptunaMlFlow:
             print(e)
 
     # ここの最適化したい処理を記述する
-    #def trial_process(self, optimizer, num_layers, dropout_rate):
-    #    return 1.0
+    def trial_process(self, optimizer, num_layers, dropout_rate):
+        return 1.0
 
     # ランダムおよびTPEサーチを行うための目的関数
     def objective_no_grid(self, trial):
@@ -195,6 +195,7 @@ def main():
     parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
     parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名。1通りのパラメータセットで学習する際には設定した実験名となる。複数のパラメータセットを探索する際には日時を付与して個別の実験名とする。')
+    parser.add_argument('-bs', '--batch_size', type=int, default=3, help='バッチサイズ')
     parser.add_argument('--seed', type=int,default=4321, help='random seed')
 
     # ここでチューニングしたいパラメータを設定する
@@ -210,13 +211,13 @@ def main():
     pprint(args.__dict__)
 
     # グリッドサーチする場合はここでチューニングしたいパラメータ空間を定義してコンストラクタに渡す
-    search_space = {
+    grid_search_space = {
         'optimizer' : args.optimizer,
         'num_layers': args.num_layers,
         'dropout_rate': args.dropout_rate
     }
 
-    optuna_mlflow=OptunaMlFlow(args, search_space)
+    optuna_mlflow=OptunaMlFlow(args, grid_search_space)
     optuna_mlflow.optimize()
 
     print("n_trials:", optuna_mlflow.n_trials)

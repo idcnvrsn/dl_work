@@ -54,6 +54,18 @@ class OptunaMlFlow:
 
         self.study = optuna.create_study(sampler=self.sampler)
 
+    def start_run(self, trial):
+        try:
+            mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number))
+        except Exception as e:
+            print(e)
+
+    def end_run(self):
+        try:
+            mlflow.end_run()
+        except Exception as e:
+            print(e)
+
     def mlflow_callback(self, study, trial):
         trial_value = trial.value if trial.value is not None else float("nan")
         with mlflow.start_run(run_name=study.study_name):
@@ -73,17 +85,22 @@ class OptunaMlFlow:
         return new_dict
 
     # mlflowにロギング
-    def log_mlflow(self, trial):
-        try:
-            with mlflow.start_run(run_name='trial_'+'{:0006}'.format(trial.number)):
-                mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
-                mlflow.log_param("n_trials", self.n_trials)
-                mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
-        except Exception as e:
-            print(e)
+    def log_trial(self, trial):
+        mlflow.log_params(self.add_dict_key_prefix("args_", self.argument.__dict__, ))
+        mlflow.log_param("n_trials", self.n_trials)
+        mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
 
     # ここの最適化したい処理を記述する
-    def trial_process(self, optimizer, num_layers, dropout_rate):
+    def trial_process(self, trial, optimizer, num_layers, dropout_rate):
+        self.start_run(trial)
+
+        # mlflowにtrialごとの情報をロギング
+        self.log_trial(trial)
+
+        mlflow.log_metric("score", 1.0, 0)
+
+        self.end_run()
+
         return 1.0
 
     # ランダムおよびTPEサーチを行うための目的関数
@@ -103,7 +120,8 @@ class OptunaMlFlow:
 
         # Discrete-uniform parameter
         drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', self.argument.drop_path_rate[0], self.argument.drop_path_rate[1], self.argument.drop_path_rate[2])
-        '''    
+        '''
+
         # Categorical parameter
         optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
@@ -122,12 +140,9 @@ class OptunaMlFlow:
         """
 
         # ここで一つのパラメータの組み合わせについて評価する
-        result=self.trial_process(optimizer, num_layers, dropout_rate)
+        result=self.trial_process(trial, optimizer, num_layers, dropout_rate)
 
-        # mlflowにロギング
-        self.log_mlflow(trial)
-
-        return 1.0
+        return result
 
     # 固定パラメータおよびグリッドサーチを行うための目的関数
     def objective_grid(self, trial):
@@ -144,6 +159,7 @@ class OptunaMlFlow:
 
         drop_path_rate = trial.suggest_categorical('drop_path_rate', self.argument.drop_path_rate)
         '''    
+
         # Categorical parameter
         optimizer = trial.suggest_categorical('optimizer', self.argument.optimizer)
 
@@ -162,12 +178,9 @@ class OptunaMlFlow:
         """
         
         # ここで一つのパラメータの組み合わせについて評価する
-        result=self.trial_process(optimizer, num_layers, dropout_rate)
+        result=self.trial_process(trial, optimizer, num_layers, dropout_rate)
 
-        # mlflowにロギング
-        self.log_mlflow(trial)
-
-        return 1.0
+        return result
 
     def optimize(self):
         self.study.optimize(self.obj_func_name, n_trials=self.n_trials, timeout=self.argument.timeout)#, callbacks=[self.mlflow_callback])

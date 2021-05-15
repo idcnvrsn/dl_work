@@ -31,6 +31,11 @@ class OptunaMlFlow:
             self.n_trials=1
             for value in self.grid_search_space.values():
                 self.n_trials*=len(value)
+
+            # トライアル回数制限
+#            if self.n_trials > self.argument.n_trials:
+#                self.n_trials = self.argument.n_trials
+
             self.obj_func_name = self.objective_grid
         elif self.argument.sampler == "random":
             self.sampler=RandomSampler(seed=self.argument.seed)
@@ -90,8 +95,9 @@ class OptunaMlFlow:
         mlflow.log_param("n_trials", self.n_trials)
         mlflow.log_params(self.add_dict_key_postfix(trial.params, "_trial_params"))
 
-    # ここの最適化したい処理を記述する
+    # 最適化したい処理を記述する(一つのrunに対応する)
     def trial_process(self, trial, optimizer, num_layers, dropout_rate):
+        # mlflowのrunを開く
         self.start_run(trial)
 
         # mlflowにtrialごとの情報をロギング
@@ -99,6 +105,7 @@ class OptunaMlFlow:
 
         mlflow.log_metric("score", 1.0, 0)
 
+        # mlflowのrunを閉じる
         self.end_run()
 
         return 1.0
@@ -139,12 +146,12 @@ class OptunaMlFlow:
         _args.loss_type=_loss_type
         """
 
-        # ここで一つのパラメータの組み合わせについて評価する
+        # ここで一つのパラメータの組み合わせ(trial)について評価する
         result=self.trial_process(trial, optimizer, num_layers, dropout_rate)
 
         return result
 
-    # 固定パラメータおよびグリッドサーチを行うための目的関数
+    # グリッドサーチおよび単一のパラメータでの学習を行う際の目的関数
     def objective_grid(self, trial):
         '''
         パラメータは原則trial,suggest_categorical()で指定する。 
@@ -177,7 +184,7 @@ class OptunaMlFlow:
         _args.loss_type=_loss_type
         """
         
-        # ここで一つのパラメータの組み合わせについて評価する
+        # ここで一つのパラメータの組み合わせ(trial)について評価する
         result=self.trial_process(trial, optimizer, num_layers, dropout_rate)
 
         return result
@@ -205,8 +212,8 @@ def main():
     
     # optunaとmlflowに設定するオプション
     parser.add_argument('-sl', '--sampler', default="grid", choices=['grid', 'random', 'tpe'], help='samplerを指定する(シングルパラメータで学習する場合はgridを指定する)')
-    parser.add_argument('-tr', '--n_trials', type=int, default=20, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
-    parser.add_argument('-to', '--timeout', type=int, default=600, help='最適化タイムアウト時間')
+    parser.add_argument('-tr', '--n_trials', type=int, default=25, help='最適化トライアル数(シングルパラメータ、グリッドサーチ時は無視される)')
+    parser.add_argument('-to', '--timeout', type=int, default=None, help='最適化タイムアウト時間')
     parser.add_argument('-exp', '--experiment', default="Default", help='実験名。1通りのパラメータセットで学習する際には設定した実験名となる。複数のパラメータセットを探索する際には日時を付与して個別の実験名とする。')
     parser.add_argument('-bs', '--batch_size', type=int, default=3, help='バッチサイズ')
     parser.add_argument('--seed', type=int,default=4321, help='random seed')
@@ -223,7 +230,8 @@ def main():
     args = parser.parse_args()
     pprint(args.__dict__)
 
-    # グリッドサーチする場合はここでチューニングしたいパラメータ空間を定義してコンストラクタに渡す
+    # グリッドサーチする場合はここでチューニングしたいパラメータ空間を定義してコンストラクタに渡す。
+    # さらに目的関数内でも組み合わせを取り出す処理を記述する
     grid_search_space = {
         'optimizer' : args.optimizer,
         'num_layers': args.num_layers,

@@ -120,10 +120,12 @@ class OptunaMlFlow:
         num_layers = trial.suggest_int('num_layers', self.argument.num_layers[0], self.argument.num_layers[1])
 
         # Uniform parameter
-        dropout_rate = trial.suggest_uniform('dropout_rate', self.argument.dropout_rate[0], self.argument.dropout_rate[1])
+        dropout_rate = trial.suggest_uniform('dropout_rate', self.argument.dropout_rate[0], self.argument.dropout_rate[1]) \
+                        if len(self.argument.dropout_rate) == 2 else self..argument.dropout_rate[0]
 
         # Loguniform parameter
-        learning_rate = trial.suggest_loguniform('learning_rate', self.argument.learning_rate[0], self.argument.learning_rate[1])
+        learning_rate = trial.suggest_loguniform('learning_rate', self.args.learning_rate[0], self.args.learning_rate[1]) \
+                        if len(self.args.learning_rate) == 2 else self.args.learning_rate[0]
 
         # Discrete-uniform parameter
         drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', self.argument.drop_path_rate[0], self.argument.drop_path_rate[1], self.argument.drop_path_rate[2])
